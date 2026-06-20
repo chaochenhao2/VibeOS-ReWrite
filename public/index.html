@@ -589,6 +589,85 @@
             line-height: 1.7;
             color: #1a1a1a;
         }
+        /* IE 内容区富媒体样式 */
+        .ie-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 8px 0;
+            display: block;
+        }
+        .ie-content a {
+            color: #003399;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .ie-content button {
+            background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%);
+            border: 1px solid #888;
+            border-radius: 3px;
+            padding: 4px 14px;
+            margin: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .ie-content button:hover {
+            background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
+        }
+        .ie-content details {
+            margin: 8px 0;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+        .ie-content summary {
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+        }
+        .ie-content mark {
+            background: #ffffaa;
+            padding: 0 2px;
+        }
+        .ie-content kbd {
+            background: #eee;
+            border: 1px solid #aaa;
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 0.9em;
+            box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        }
+
+        /* ============ Markdown 完整样式 ============ */
+        .ie-content h1 { font-size: 1.8em; margin: 0.8em 0 0.4em; color: #003399; border-bottom: 2px solid #ccc; padding-bottom: 0.2em; }
+        .ie-content h2 { font-size: 1.5em; margin: 0.7em 0 0.3em; color: #1a4b8c; border-bottom: 1px solid #ddd; }
+        .ie-content h3 { font-size: 1.2em; margin: 0.6em 0 0.2em; color: #333; }
+        .ie-content h4, .ie-content h5, .ie-content h6 { font-size: 1.1em; margin: 0.5em 0 0.2em; }
+        .ie-content p { margin: 0.6em 0; }
+        .ie-content ul, .ie-content ol { padding-left: 2em; margin: 0.6em 0; }
+        .ie-content li { margin: 0.2em 0; }
+        .ie-content table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        .ie-content th, .ie-content td { border: 1px solid #aaa; padding: 6px 12px; text-align: left; }
+        .ie-content th { background: #e0e8f0; font-weight: bold; }
+        .ie-content tr:nth-child(even) { background: #f9f9f9; }
+        .ie-content blockquote { border-left: 4px solid #7b9cc4; background: #f0f4f8; margin: 0.8em 0; padding: 0.5em 1em; color: #333; }
+        .ie-content code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.9em; }
+        .ie-content pre { background: #f5f5f5; border: 1px solid #ccc; padding: 12px; border-radius: 4px; overflow-x: auto; margin: 0.8em 0; font-size: 0.9em; }
+        .ie-content pre code { background: none; padding: 0; }
+        .ie-content hr { border: none; border-top: 1px solid #ccc; margin: 1em 0; }
+        .ie-content input[type="checkbox"] { margin-right: 6px; transform: scale(1.1); }
+        .ie-content del { color: #888; }
+        .ie-content sup { font-size: 0.8em; }
+        .ie-content .footnotes { font-size: 0.9em; border-top: 1px solid #ccc; margin-top: 2em; }
+        .ie-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 0.5em 0; }
+        .ie-content a { color: #003399; text-decoration: underline; cursor: pointer; }
+        .ie-content a:hover { color: #0066cc; }
+        .ie-content button { background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%); border: 1px solid #888; border-radius: 3px; padding: 4px 14px; margin: 4px; cursor: pointer; font-family: inherit; }
+        .ie-content button:hover { background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%); }
+        .ie-content details { margin: 0.8em 0; background: #f9f9f9; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; }
+        .ie-content summary { font-weight: bold; cursor: pointer; outline: none; }
+        .ie-content kbd { background: #eee; border: 1px solid #aaa; border-radius: 3px; padding: 1px 5px; font-size: 0.9em; box-shadow: 1px 1px 1px rgba(0,0,0,0.2); }
         .ie-statusbar {
             background: #f0ead8;
             border-top: 1px solid #c0b8a0;
@@ -728,6 +807,15 @@
 
     <script>
         (function() {
+            // ---------- Markdown 配置 ----------
+            marked.setOptions({
+                gfm: true,
+                breaks: true,
+                pedantic: false,
+                smartLists: true,
+                smartypants: true
+            });
+
             // ---------- DOM 元素 ----------
             const desktop = document.getElementById('desktop');
             const startBtn = document.getElementById('start-button');
@@ -872,18 +960,84 @@
 
             async function handleResultClick(result) {
                 closeSearch();
-                const ie = openIE(result.title, '<p>⏳ AI 正在生成内容...</p>', true);
+                const ieWin = openIE(result.title, '', true);
+                ieWin.searchQuery = searchInput.value.trim();
+                ieWin._resultTitle = result.title;
+                const winId = ieWin.id;
+
+                // 清空内容区，准备流式更新
+                const winData = ieWindows.find(w => w.id === winId);
+                if (!winData) return;
+                const contentEl = winData.element.querySelector('.ie-content');
+                contentEl.innerHTML = '<p style="color:#888;">⏳ AI 正在生成内容...</p>';
+
                 try {
-                    const res = await fetch('/api/content', {
+                    const response = await fetch('/api/content', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ title: result.title, query: searchInput.value.trim() })
                     });
-                    if (!res.ok) throw new Error('内容生成失败');
-                    const data = await res.json();
-                    updateIEContent(ie.id, result.title, data.content);
+
+                    if (!response.ok) throw new Error('网络错误');
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let accumulatedText = '';
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                try {
+                                    const event = JSON.parse(data);
+                                        if (event.content) {
+                                            accumulatedText += event.content;
+                                            // 每次收到新 token 都用 marked 重新渲染累积全文
+                                            try {
+                                                contentEl.innerHTML = marked.parse(accumulatedText);
+                                            } catch (e) {
+                                                // 如果 marked 报错，暂时用纯文本
+                                                contentEl.innerHTML = `<pre>${escapeHtml(accumulatedText)}</pre>`;
+                                            }
+                                            applyMediaFallback(contentEl);
+                                            // 自动滚动到底部
+                                            contentEl.scrollTop = contentEl.scrollHeight;
+                                        }
+                                        if (event.done) {
+                                            // 流结束，用 marked 渲染最终内容
+                                            try {
+                                                contentEl.innerHTML = marked.parse(accumulatedText);
+                                            } catch (e) {
+                                                contentEl.innerHTML = `<pre>${escapeHtml(accumulatedText)}</pre>`;
+                                            }
+                                            applyMediaFallback(contentEl);
+                                            updateIEContentTitle(winId, result.title);
+                                            return;
+                                        }
+                                    if (event.error) {
+                                        contentEl.innerHTML = `<p style="color:red;">${escapeHtml(event.error)}</p>`;
+                                        return;
+                                    }
+                                } catch (e) {
+                                    // 忽略非 JSON 行
+                                }
+                            }
+                        }
+                    }
                 } catch (err) {
-                    updateIEContent(ie.id, result.title, '# 内容加载失败\n\n请稍后重试。');
+                    const winData = ieWindows.find(w => w.id === winId);
+                    if (winData) {
+                        const contentEl = winData.element.querySelector('.ie-content');
+                        contentEl.innerHTML = '<p style="color:red;">内容加载失败，请稍后重试。</p>';
+                    }
                 }
             }
 
@@ -929,7 +1083,7 @@
                     <div class="ie-toolbar"><button>后退</button><button>前进</button><button>刷新</button></div>
                     <div class="ie-address-bar"><span>地址</span> <input class="addr-input" value="https://ai.xp/~${encodeURIComponent(title)}" readonly></div>
                     <div class="ie-content"></div>
-                    <div class="ie-statusbar">完成</div>`;
+                    <div class="ie-statusbar">\n                        <span class="ie-status-text" data-win-id="${win.id}">完成</span>\n                        <span class="status-section">Internet</span>\n                        <div style="flex:1;"></div>\n                        <input type="text" class="ie-chat-input" placeholder="输入消息..." autocomplete="off">\n                        <button class="ie-chat-send">发送</button>\n                    </div>`;
                 ieContainer.appendChild(el);
                 win.element = el;
 
@@ -959,6 +1113,49 @@
                     startDrag(win, e);
                 });
 
+                // IE 工具栏按钮
+                const toolbarEl = el.querySelector('.ie-toolbar');
+                if (toolbarEl) {
+                    const toolbarBtns = toolbarEl.querySelectorAll('button');
+                    // 后退按钮
+                    if (toolbarBtns[0]) {
+                        toolbarBtns[0].addEventListener('click', () => {
+                            // 简单效果：闪烁状态栏
+                            const sb = el.querySelector('.ie-statusbar');
+                            if (sb) sb.textContent = '后退功能暂未实现';
+                        });
+                    }
+                    // 前进按钮
+                    if (toolbarBtns[1]) {
+                        toolbarBtns[1].addEventListener('click', () => {
+                            const sb = el.querySelector('.ie-statusbar');
+                            if (sb) sb.textContent = '前进功能暂未实现';
+                        });
+                    }
+                    // 刷新按钮
+                    if (toolbarBtns[2]) {
+                        toolbarBtns[2].addEventListener('click', () => {
+                            const sb = el.querySelector('.ie-statusbar');
+                            if (sb) sb.textContent = '正在刷新...';
+                            const contentEl = el.querySelector('.ie-content');
+                            if (contentEl) contentEl.innerHTML = '<p>🔄 正在刷新...</p>';
+                            if (!win.isPlaceholder && win.content) {
+                                // 重新渲染已有内容
+                                try { contentEl.innerHTML = marked.parse(win.content); } catch (e) { contentEl.innerHTML = win.content; }
+                                applyMediaFallback(contentEl);
+                                if (sb) sb.textContent = '完成';
+                            } else {
+                                // 如果是 placeholder，重新触发搜索
+                                if (sb) sb.textContent = '刷新完成';
+                                contentEl.innerHTML = '<p style="color:#888;">⏳ 正在重新加载...</p>';
+                                if (win.searchQuery) {
+                                    doSearch(win.searchQuery, win._resultTitle);
+                                }
+                            }
+                        });
+                    }
+                }
+
                 ieWindows.push(win);
                 setActive(id);
                 renderContent(win);
@@ -970,6 +1167,7 @@
                 if (contentEl) {
                     try { contentEl.innerHTML = marked.parse(win.content); } catch (e) { contentEl.innerHTML = win
                             .content; }
+                    applyMediaFallback(contentEl);
                 }
             }
 
@@ -984,6 +1182,19 @@
                 win.element.querySelector('.addr-input').value = 'https://ai.xp/~' + encodeURIComponent(title);
                 renderContent(win);
                 setActive(id);
+            }
+
+            function updateIEContentTitle(winId, newTitle) {
+                const winData = ieWindows.find(w => w.id === winId);
+                if (!winData) return;
+                winData.title = newTitle;
+                const titleLabel = winData.element.querySelector('.ie-title-label');
+                if (titleLabel) titleLabel.textContent = newTitle + ' — Internet Explorer';
+                const tbLabel = winData.taskbarBtn?.querySelector('span:last-child');
+                if (tbLabel) tbLabel.textContent = newTitle;
+                if (winData.taskbarBtn) winData.taskbarBtn.title = newTitle + ' — Internet Explorer';
+                const addrInput = winData.element.querySelector('.addr-input');
+                if (addrInput) addrInput.value = 'https://ai.xp/~' + encodeURIComponent(newTitle);
             }
 
             function setActive(id) {
@@ -1126,6 +1337,55 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            // 媒体元素加载失败回退：用橙色文字替换
+            function applyMediaFallback(container) {
+                if (!container) return;
+                container.querySelectorAll('img').forEach(img => {
+                    if (img.dataset.fallbackBound) return;
+                    img.dataset.fallbackBound = 'true';
+                    img.addEventListener('error', () => {
+                        const altText = img.alt || img.src.split('/').pop() || '图片';
+                        const span = document.createElement('span');
+                        span.style.color = '#ff8c00';
+                        span.style.fontStyle = 'italic';
+                        span.textContent = '[' + altText + ' 加载失败]';
+                        img.parentNode?.replaceChild(span, img);
+                    });
+                });
+                container.querySelectorAll('video').forEach(video => {
+                    if (video.dataset.fallbackBound) return;
+                    video.dataset.fallbackBound = 'true';
+                    video.addEventListener('error', () => {
+                        const desc = video.getAttribute('title') || '视频';
+                        const span = document.createElement('span');
+                        span.style.color = '#ff8c00';
+                        span.style.fontStyle = 'italic';
+                        span.textContent = '[' + desc + ' 无法播放]';
+                        video.parentNode?.replaceChild(span, video);
+                    });
+                });
+            }
+
+            // 前端模拟内容生成（AI 回退用）
+            function getMockContentFromHtml(title, query) {
+                return `# ${title}
+
+## 概述
+这是关于 **"${title}"** 的详细内容页面。  
+您搜索的关键词为：*${query}*。
+
+## 背景
+该主题涵盖了多个维度的信息。
+
+### 关键点
+- 数据来源：综合多个权威渠道
+- 相关性：与您的搜索高度匹配
+- 生成时间：${new Date().toLocaleString('zh-CN')}
+
+## 说明
+当前使用模拟数据进行演示。如需真实 AI 生成，请在 \`.env\` 中设置 \`ENABLE_AI=true\`。`;
             }
 
             console.log('🖥️ Windows XP AI Desktop 已启动');

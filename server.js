@@ -137,34 +137,128 @@ app.post('/api/search', async (req, res) => {
     }
 });
 
-// 内容生成接口
+// 内容生成接口（流式传输）
 app.post('/api/content', async (req, res) => {
     const { title, query } = req.body;
     if (!title) {
         return res.status(400).json({ error: '缺少标题' });
     }
 
+    // 设置 SSE 头
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const send = (data) => {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const generateMockContent = (t, q) => {
+        const mock = getMockContent(t, q || '');
+        let index = 0;
+        const chunkSize = 10;
+        const interval = setInterval(() => {
+            if (index < mock.length) {
+                send({ content: mock.slice(index, index + chunkSize) });
+                index += chunkSize;
+            } else {
+                clearInterval(interval);
+                send({ done: true });
+                res.end();
+            }
+        }, 20);
+    };
+
     try {
-        let content;
         if (ENABLE_AI) {
-            const systemPrompt = `你是一个知识助手。根据用户点击的搜索结果生成详细、结构化的 Markdown 内容，包含标题、小节、列表等，至少 300 字。只返回 Markdown，不要额外说明。`;
-            const response = await callRealAI([
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: `原始搜索: "${query || title}"，点击的结果标题: "${title}"。请生成详细内容。` }
-            ], 0.8, 2500);
-            content = response.trim();
+            // 调用 AI，开启 stream
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: API_MODEL,
+                    messages: [
+                        { role: 'system', content: '你是一个知识助手。根据用户点击的搜索结果生成详细、结构化的 Markdown 内容，包含标题、小节、列表等。你可以使用以下元素让页面更丰富：\n- 超链接：[链接文本](https://example.com)\n- 图片：![描述](https://image.url)（使用真实可访问的图片链接）\n- 按钮：使用 HTML <button onclick="alert(\'你好\')">点击我</button> 标签\n- 折叠面板：<details><summary>点击展开</summary>详细内容</details>\n- 其他 HTML 元素如 <kbd>快捷键</kbd>、<mark>高亮</mark> 等。\n注意：确保 Markdown 和 HTML 混合输出有效，不要添加额外的代码块标记。只返回 Markdown 内容。' },
+                        { role: 'user', content: `原始搜索: "${query || title}"，点击的结果标题: "${title}"。请生成详细内容。` }
+                    ],
+                    stream: true,
+                    temperature: 0.8,
+                    max_tokens: 2500
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`AI API 请求失败: ${response.status}`);
+            }
+
+            const stream = response.body;
+            let buffer = '';
+
+            stream.on('data', chunk => {
+                buffer += chunk.toString();
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // 保留未完成行
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6).trim();
+                        if (data === '[DONE]') {
+                            send({ done: true });
+                            res.end();
+                            return;
+                        }
+                        try {
+                            const parsed = JSON.parse(data);
+                            const content = parsed.choices?.[0]?.delta?.content;
+                            if (content) {
+                                send({ content });  // 发送每个 token
+                            }
+                        } catch (e) { /* 忽略非 JSON 行 */ }
+                    }
+                }
+            });
+
+            stream.on('end', () => {
+                send({ done: true });
+                res.end();
+            });
+
+            stream.on('error', (err) => {
+                console.error('流读取错误:', err);
+                send({ error: '流中断' });
+                res.end();
+            });
         } else {
-            await new Promise(r => setTimeout(r, 600));
-            content = getMockContent(title, query || '');
+            // 模拟模式：逐段发送内容（打字机效果）
+            const mockContent = getMockContent(title, query || '');
+            let index = 0;
+            const chunkSize = 5; // 每次发送 5 个字符
+            const interval = setInterval(() => {
+                if (index < mockContent.length) {
+                    const chunk = mockContent.slice(index, index + chunkSize);
+                    send({ content: chunk });
+                    index += chunkSize;
+                } else {
+                    clearInterval(interval);
+                    send({ done: true });
+                    res.end();
+                }
+            }, 30);
         }
-        res.json({ content });
     } catch (error) {
         console.error('内容生成失败:', error.message);
         if (ENABLE_AI) {
-            const content = getMockContent(title, query || '');
-            return res.json({ content, fallback: true });
+            // AI 出错时发送错误事件，前端会回退到模拟数据
+            send({ error: 'AI 调用失败，将使用模拟数据', fallback: true });
+            generateMockContent(title, query || '');
+        } else {
+            send({ error: '内容生成失败' });
+            res.end();
         }
-        res.status(500).json({ error: '内容生成失败' });
     }
 });
 
