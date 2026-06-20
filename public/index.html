@@ -3,781 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows XP — AI Desktop</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
-    </script>
+    <title>Windows XP — AI HTML Generator</title>
     <style>
-        :root {
-            --taskbar-blue-start: #1a4b8c;
-            --taskbar-blue-mid: #3a6bc5;
-            --taskbar-blue-end: #1a4b8c;
-            --win-title-active-start: #0058e6;
-            --win-title-active-end: #3a8cf5;
-            --win-title-inactive-start: #7b9cc4;
-            --win-title-inactive-end: #b5c7de;
-            --start-btn-green-start: #3c9a3c;
-            --start-btn-green-end: #2d7a2d;
-            --start-btn-hover-start: #4ab84a;
-            --start-btn-hover-end: #3a9a3a;
-            --menu-bg: #ffffff;
-            --menu-border: #003399;
-            --menu-hover: #316ac5;
-            --menu-hover-text: #ffffff;
-            --window-bg: #ece9d8;
-            --button-face: #ece9d8;
-            --button-highlight: #ffffff;
-            --button-shadow: #aca899;
-            --button-dark-shadow: #716f64;
-            --text-color: #000000;
-            --sys-tray-bg: #1e5bb5;
-            --sys-tray-time: #ffffff;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Tahoma', 'Microsoft Sans Serif', 'Segoe UI', sans-serif;
-            font-size: 11px;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            user-select: none;
-            -webkit-user-select: none;
-            cursor: default;
-            background: #000;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tahoma', sans-serif; font-size: 11px; overflow: hidden; height: 100vh; background: #000; }
 
         /* 桌面 */
-        #desktop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 40px;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/05/Bliss_%28Windows_XP%29.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 0;
-        }
-
-        #desktop.fallback-bg {
-            background-image: none;
-            background: linear-gradient(180deg,
-                    #87CEEB 0%, #87CEEB 35%,
-                    #7ec856 35%, #5da832 55%,
-                    #4a8e2a 55%, #3d7722 70%,
-                    #5a9e35 70%, #8bc34a 100%);
-        }
+        #desktop { position: fixed; top: 0; left: 0; right: 0; bottom: 40px; background: url('https://upload.wikimedia.org/wikipedia/commons/0/05/Bliss_%28Windows_XP%29.png') center/cover; z-index: 0; }
+        #desktop.fallback-bg { background-image: none; background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 35%, #7ec856 35%, #5da832 55%, #4a8e2a 55%, #3d7722 70%, #5a9e35 70%, #8bc34a 100%); }
 
         /* 任务栏 */
-        #taskbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 40px;
-            background: linear-gradient(180deg,
-                    #3573c9 0%, #2b5eb0 3px,
-                    #1e4d9e 3px, #2560b8 50%,
-                    #1b4a8c 50%, #1a4480 100%);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            padding: 0 2px;
-            box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.3) inset,
-                0 -2px 0 rgba(0, 0, 0, 0.15);
-            border-top: 1px solid #4a80d0;
-        }
+        #taskbar { position: fixed; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(180deg, #3573c9 0%, #2b5eb0 3px, #1e4d9e 3px, #2560b8 50%, #1b4a8c 50%, #1a4480 100%); z-index: 1000; display: flex; align-items: center; padding: 0 2px; }
+        #start-btn { height: 34px; min-width: 100px; background: linear-gradient(180deg, #4caf4c 0%, #3d9a3d 40%, #2e7d2e 40%, #256b25 100%); color: #fff; font-weight: bold; border: none; border-radius: 0 12px 12px 0; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 0 14px; }
+        #start-menu { position: fixed; bottom: 42px; left: 4px; width: 320px; background: #fff; border: 2px solid #003399; border-radius: 8px 8px 0 0; display: none; z-index: 999; }
+        #start-menu.visible { display: block; animation: menuSlideUp 0.15s ease-out; }
+        @keyframes menuSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .menu-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; }
+        .menu-item:hover { background: #316ac5; color: #fff; }
+        #clock { color: #fff; margin-left: auto; margin-right: 10px; font-size: 11px; }
 
-        #start-button {
-            height: 34px;
-            min-width: 100px;
-            padding: 0 18px 0 14px;
-            border: none;
-            border-radius: 0 12px 12px 0;
-            background: linear-gradient(180deg,
-                    #4caf4c 0%, #3d9a3d 40%,
-                    #2e7d2e 40%, #256b25 100%);
-            color: #fff;
-            font-weight: bold;
-            font-size: 13px;
-            font-family: 'Tahoma', sans-serif;
-            cursor: pointer;
-            letter-spacing: 0.5px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-            box-shadow: 0 1px 1px rgba(255, 255, 255, 0.4) inset,
-                2px 0 4px rgba(0, 0, 0, 0.3);
-            transition: filter 0.08s;
-            flex-shrink: 0;
-            margin-left: 1px;
-        }
-        #start-button:hover {
-            filter: brightness(1.15);
-        }
-        #start-button:active,
-        #start-button.active {
-            filter: brightness(0.85);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) inset;
-        }
-        #start-button .flag-icon {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
-        }
-
-        .taskbar-separator {
-            width: 2px;
-            height: 28px;
-            background: rgba(255, 255, 255, 0.2);
-            margin: 0 3px;
-            border-left: 1px solid rgba(0, 0, 0, 0.3);
-            flex-shrink: 0;
-        }
-
-        #taskbar-windows {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            padding: 0 6px;
-            overflow-x: auto;
-            min-width: 0;
-            height: 100%;
-        }
-        .taskbar-window-btn {
-            height: 28px;
-            min-width: 140px;
-            max-width: 200px;
-            padding: 0 12px;
-            background: linear-gradient(180deg,
-                    #4a7cc9 0%, #3565b0 50%,
-                    #2d5599 50%, #234780 100%);
-            border: 1px solid #1a3d6e;
-            border-radius: 3px;
-            color: #fff;
-            font-size: 11px;
-            font-family: 'Tahoma', sans-serif;
-            cursor: pointer;
-            text-align: left;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-            box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2) inset;
-            transition: background 0.1s;
-        }
-        .taskbar-window-btn:hover {
-            background: linear-gradient(180deg,
-                    #5a8cd9 0%, #4575c0 50%,
-                    #3d65a9 50%, #345890 100%);
-        }
-        .taskbar-window-btn.active-window {
-            background: linear-gradient(180deg,
-                    #3a6bc5 0%, #2b5599 50%,
-                    #1e4480 50%, #163668 100%);
-            border-color: #0f2440;
-            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3) inset;
-        }
-        .taskbar-window-btn .tb-win-icon {
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-        }
-
-        #system-tray {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            padding: 0 8px 0 4px;
-            height: 34px;
-            background: rgba(30, 80, 170, 0.6);
-            border-left: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 2px 0 0 2px;
-            flex-shrink: 0;
-            margin-right: 2px;
-        }
-        #system-tray .tray-icons {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding-right: 6px;
-        }
-        #system-tray .tray-icon {
-            width: 16px;
-            height: 16px;
-            opacity: 0.9;
-        }
-        #clock-display {
-            color: #fff;
-            font-size: 11px;
-            font-family: 'Tahoma', sans-serif;
-            white-space: nowrap;
-            padding: 2px 4px;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-            letter-spacing: 0.3px;
-        }
-
-        /* 开始菜单 */
-        #start-menu {
-            position: fixed;
-            bottom: 42px;
-            left: 4px;
-            width: 390px;
-            max-width: 95vw;
-            background: #fff;
-            border: 2px solid #003399;
-            border-radius: 8px 8px 0 0;
-            box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.55),
-                0 0 0 1px rgba(0, 0, 0, 0.2);
-            z-index: 999;
-            display: none;
-            overflow: hidden;
-            font-family: 'Tahoma', sans-serif;
-        }
-        #start-menu.visible {
-            display: block;
-            animation: menuAppear 0.12s ease-out;
-        }
-        @keyframes menuAppear {
-            from {
-                opacity: 0;
-                transform: translateY(15px) scale(0.96);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        #start-menu .menu-header {
-            background: linear-gradient(180deg, #1a6dd4 0%, #0d4fa8 100%);
-            padding: 10px 14px;
-            color: #fff;
-            font-weight: bold;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            letter-spacing: 0.3px;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-        }
-        #start-menu .menu-header .user-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 6px;
-            background: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-        #start-menu .menu-items {
-            padding: 4px 0;
-            background: #fff;
-            border-top: 1px solid #d0d0d0;
-        }
-        #start-menu .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 7px 16px;
-            cursor: pointer;
-            font-size: 12px;
-            color: #1a1a1a;
-            transition: background 0.06s, color 0.06s;
-        }
-        #start-menu .menu-item:hover {
-            background: #316ac5;
-            color: #fff;
-        }
-        #start-menu .menu-item .menu-icon {
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-            border-radius: 3px;
-        }
-        #start-menu .menu-divider {
-            height: 1px;
-            background: #d0d0d0;
-            margin: 3px 10px;
-        }
-        #start-menu .menu-footer {
-            background: #f0f0f0;
-            border-top: 1px solid #d0d0d0;
-            padding: 2px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        #start-menu .menu-footer .footer-btn {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 14px;
-            cursor: pointer;
-            font-size: 11px;
-            color: #1a1a1a;
-            border-radius: 3px;
-            transition: background 0.06s;
-        }
-        #start-menu .menu-footer .footer-btn:hover {
-            background: #316ac5;
-            color: #fff;
-        }
+        /* 任务栏窗口按钮区域 */
+        #taskbar-windows { flex: 1; display: flex; align-items: center; gap: 4px; padding: 0 8px; overflow-x: auto; }
+        .taskbar-btn { height: 28px; padding: 0 12px; background: linear-gradient(180deg, #4a7cc9 0%, #3565b0 50%, #2d5599 50%, #234780 100%); border: 1px solid #1a3d6e; border-radius: 3px; color: #fff; font-size: 11px; cursor: pointer; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 160px; }
+        .taskbar-btn.active { background: linear-gradient(180deg, #3a6bc5 0%, #2b5599 50%, #1e4480 50%, #163668 100%); border-color: #0f2440; box-shadow: inset 0 2px 3px rgba(0,0,0,0.3); }
 
         /* 搜索弹窗 */
-        #search-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 40px;
-            background: rgba(0, 0, 0, 0.35);
-            z-index: 800;
-            display: none;
-            align-items: flex-start;
-            justify-content: center;
-            padding-top: 8vh;
-        }
-        #search-overlay.visible {
-            display: flex;
-        }
-        #search-modal {
-            background: #fff;
-            border: 2px solid #003399;
-            border-radius: 8px;
-            box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.6);
-            width: 520px;
-            max-width: 92vw;
-            max-height: 75vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            font-family: 'Tahoma', sans-serif;
-            animation: modalSlideIn 0.2s ease-out;
-        }
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px) scale(0.94);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        #search-modal .search-titlebar {
-            background: linear-gradient(180deg, #0058e6 0%, #3a8cf5 40%, #2b7aee 50%, #1a60d0 100%);
-            padding: 6px 10px;
-            color: #fff;
-            font-weight: bold;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-radius: 4px 4px 0 0;
-        }
-        #search-modal .search-titlebar .close-btn {
-            width: 20px;
-            height: 20px;
-            background: #d04030;
-            border: 1px solid #8b1a10;
-            border-radius: 3px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #fff;
-            font-weight: bold;
-            line-height: 1;
-            transition: filter 0.08s;
+        #search-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 40px; background: rgba(0,0,0,0.35); z-index: 800; display: none; align-items: flex-start; justify-content: center; padding-top: 8vh; }
+        #search-overlay.visible { display: flex; }
+        #search-modal { background: #fff; border: 2px solid #003399; border-radius: 8px; box-shadow: 4px 4px 20px rgba(0,0,0,0.6); width: 520px; max-width: 92vw; max-height: 75vh; display: flex; flex-direction: column; overflow: hidden; animation: windowFadeIn 0.2s ease-out; }
+        @keyframes windowFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .search-titlebar { background: linear-gradient(180deg, #0058e6 0%, #3a8cf5 40%, #2b7aee 50%, #1a60d0 100%); color: #fff; padding: 6px 10px; font-weight: bold; display: flex; justify-content: space-between; }
+        .search-close { background: #d04030; border: none; color: #fff; width: 20px; height: 20px; cursor: pointer; border-radius: 2px; }
+        .search-body { padding: 16px; background: #ece9d8; flex: 1; display: flex; flex-direction: column; }
+        .search-input-row { display: flex; gap: 8px; }
+        .search-input { flex: 1; padding: 7px 10px; border: 1px solid #7f9db9; border-radius: 3px; font-size: 13px; outline: none; }
+        .search-btn { padding: 7px 18px; background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%); border: 1px solid #7f9db9; cursor: pointer; }
+        .results-area { flex: 1; overflow-y: auto; margin-top: 12px; background: #fff; border: 1px solid #c0c0c0; padding: 4px; display: none; }
+        .results-area.visible { display: block; }
+        .result-item { display: flex; gap: 10px; padding: 10px 8px; cursor: pointer; border-bottom: 1px solid #e8e8e8; }
+        .result-item:hover { background: #e8f0fa; }
+        .result-icon { font-size: 22px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #f0f4f8; border-radius: 4px; }
+        .result-title { font-weight: bold; color: #1a3d8f; text-decoration: underline; }
+        .result-desc { color: #444; }
+        .loading-indicator { display: none; justify-content: center; align-items: center; gap: 10px; padding: 30px; }
+        .loading-indicator.visible { display: flex; }
+        .loading-spinner { width: 28px; height: 28px; border: 3px solid #ccc; border-top-color: #316ac5; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 动态窗口 */
+        .ai-window { position: fixed; width: 600px; height: 450px; min-width: 300px; min-height: 250px; background: #ece9d8; border: 2px solid #003399; border-radius: 8px 8px 4px 4px; box-shadow: 4px 4px 18px rgba(0,0,0,0.5); display: none; flex-direction: column; z-index: 500; resize: both; overflow: hidden; }
+        .ai-window.visible { display: flex; animation: windowFadeIn 0.25s ease-out; }
+        .ai-window.active { z-index: 600; }
+        .win-titlebar { background: linear-gradient(180deg, #0058e6 0%, #3a8cf5 40%, #2b7aee 50%, #1a60d0 100%); color: #fff; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; cursor: move; }
+        .win-controls { display: flex; gap: 2px; }
+        .win-ctrl-btn { width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1; border-radius: 2px; }
+        .win-ctrl-btn:hover { background: rgba(255,255,255,0.25); }
+        .win-close { background: #d04030; border-color: #8b1a10; }
+        .win-close:hover { background: #e05040; }
+        .win-body { flex: 1; overflow: hidden; background: #fff; position: relative; }
+        .win-input-bar { display: flex; padding: 6px; background: #f0ead8; border-top: 1px solid #c0b8a0; }
+        .win-input-bar input { flex: 1; padding: 4px; border: 1px solid #7f9db9; }
+        .win-input-bar button { margin-left: 4px; padding: 4px 12px; background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%); border: 1px solid #888; cursor: pointer; }
+
+        /* 代码预览区：黑底绿字，在输入栏下方 */
+        .code-preview {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 50px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
             flex-shrink: 0;
         }
-        #search-modal .search-body {
-            padding: 16px;
-            background: #ece9d8;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .search-input-row {
-            display: flex;
-            gap: 8px;
-        }
-        .search-input {
-            flex: 1;
-            padding: 7px 10px;
-            border: 1px solid #7f9db9;
-            border-radius: 3px;
-            font-size: 13px;
-            font-family: 'Tahoma', sans-serif;
-            background: #fff;
-            outline: none;
-        }
-        .search-btn {
-            padding: 7px 18px;
-            background: linear-gradient(180deg, #f8f8f8 0%, #e0e0e0 50%, #d0d0d0 50%, #c8c8c8 100%);
-            border: 1px solid #7f9db9;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: 'Tahoma', sans-serif;
-            white-space: nowrap;
-        }
-        .loading-indicator {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 30px;
-            color: #555;
-        }
-        .loading-indicator.visible {
-            display: flex;
-        }
-        .loading-spinner {
-            width: 28px;
-            height: 28px;
-            border: 3px solid #d0d0d0;
-            border-top-color: #316ac5;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        .results-area {
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 12px;
-            background: #fff;
-            border: 1px solid #c0c0c0;
-            border-radius: 3px;
-            padding: 4px;
-            display: none;
-            max-height: 50vh;
-        }
-        .results-area.visible {
-            display: block;
-        }
-        .search-result-item {
-            display: flex;
-            gap: 10px;
-            padding: 10px 8px;
-            cursor: pointer;
-            border-bottom: 1px solid #e8e8e8;
-            align-items: flex-start;
-        }
-        .search-result-item:hover {
-            background: #e8f0fa;
-        }
-        .result-icon {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            background: #f0f4f8;
-            border-radius: 4px;
-        }
-        .result-title {
-            font-weight: bold;
-            font-size: 12px;
-            color: #1a3d8f;
-            text-decoration: underline;
-        }
-        .result-desc {
-            font-size: 11px;
-            color: #444;
-        }
 
-        /* IE 窗口 */
-        .ie-window {
-            position: fixed;
-            width: 700px;
-            height: 500px;
-            background: #fff;
-            border: 2px solid #003399;
-            border-radius: 8px 8px 4px 4px;
-            box-shadow: 4px 4px 18px rgba(0, 0, 0, 0.5);
-            z-index: 500;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            font-family: 'Tahoma', sans-serif;
-            resize: both;
-        }
-        .ie-window.visible {
-            display: flex;
-        }
-        .ie-window.active-window {
-            z-index: 600;
-        }
-        .ie-titlebar {
-            background: linear-gradient(180deg, #0058e6 0%, #3a8cf5 40%, #2b7aee 50%, #1a60d0 100%);
-            padding: 5px 8px;
-            color: #fff;
-            font-weight: bold;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .ie-window.inactive .ie-titlebar {
-            background: linear-gradient(180deg, #7b9cc4 0%, #b5c7de 40%, #9db5d4 50%, #8aa8c8 100%);
-        }
-        .ie-title-text {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex: 1;
-            overflow: hidden;
-        }
-        .ie-menubar {
-            background: #f0ead8;
-            border-bottom: 1px solid #c0b8a0;
-            padding: 2px 6px;
-            display: flex;
-            gap: 2px;
-            font-size: 11px;
-        }
-        .ie-toolbar {
-            background: #f8f4e8;
-            border-bottom: 1px solid #c0b8a0;
-            padding: 4px 6px;
-            display: flex;
-            gap: 4px;
-        }
-        .ie-address-bar {
-            background: #f8f4e8;
-            padding: 4px 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border-bottom: 1px solid #c0b8a0;
-        }
-        .ie-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 20px;
-            background: #fff;
-            font-size: 12px;
-            line-height: 1.7;
-            color: #1a1a1a;
-        }
-        /* IE 内容区富媒体样式 */
-        .ie-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            margin: 8px 0;
-            display: block;
-        }
-        .ie-content a {
-            color: #003399;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .ie-content button {
-            background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%);
-            border: 1px solid #888;
-            border-radius: 3px;
-            padding: 4px 14px;
-            margin: 4px;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        .ie-content button:hover {
-            background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
-        }
-        .ie-content details {
-            margin: 8px 0;
-            background: #f9f9f9;
-            border: 1px solid #ccc;
-            padding: 6px 10px;
-            border-radius: 4px;
-        }
-        .ie-content summary {
-            font-weight: bold;
-            cursor: pointer;
-            outline: none;
-        }
-        .ie-content mark {
-            background: #ffffaa;
-            padding: 0 2px;
-        }
-        .ie-content kbd {
-            background: #eee;
-            border: 1px solid #aaa;
-            border-radius: 3px;
-            padding: 1px 5px;
-            font-size: 0.9em;
-            box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
-        }
-
-        /* ============ Markdown 完整样式 ============ */
-        .ie-content h1 { font-size: 1.8em; margin: 0.8em 0 0.4em; color: #003399; border-bottom: 2px solid #ccc; padding-bottom: 0.2em; }
-        .ie-content h2 { font-size: 1.5em; margin: 0.7em 0 0.3em; color: #1a4b8c; border-bottom: 1px solid #ddd; }
-        .ie-content h3 { font-size: 1.2em; margin: 0.6em 0 0.2em; color: #333; }
-        .ie-content h4, .ie-content h5, .ie-content h6 { font-size: 1.1em; margin: 0.5em 0 0.2em; }
-        .ie-content p { margin: 0.6em 0; }
-        .ie-content ul, .ie-content ol { padding-left: 2em; margin: 0.6em 0; }
-        .ie-content li { margin: 0.2em 0; }
-        .ie-content table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-        .ie-content th, .ie-content td { border: 1px solid #aaa; padding: 6px 12px; text-align: left; }
-        .ie-content th { background: #e0e8f0; font-weight: bold; }
-        .ie-content tr:nth-child(even) { background: #f9f9f9; }
-        .ie-content blockquote { border-left: 4px solid #7b9cc4; background: #f0f4f8; margin: 0.8em 0; padding: 0.5em 1em; color: #333; }
-        .ie-content code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.9em; }
-        .ie-content pre { background: #f5f5f5; border: 1px solid #ccc; padding: 12px; border-radius: 4px; overflow-x: auto; margin: 0.8em 0; font-size: 0.9em; }
-        .ie-content pre code { background: none; padding: 0; }
-        .ie-content hr { border: none; border-top: 1px solid #ccc; margin: 1em 0; }
-        .ie-content input[type="checkbox"] { margin-right: 6px; transform: scale(1.1); }
-        .ie-content del { color: #888; }
-        .ie-content sup { font-size: 0.8em; }
-        .ie-content .footnotes { font-size: 0.9em; border-top: 1px solid #ccc; margin-top: 2em; }
-        .ie-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 0.5em 0; }
-        .ie-content a { color: #003399; text-decoration: underline; cursor: pointer; }
-        .ie-content a:hover { color: #0066cc; }
-        .ie-content button { background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%); border: 1px solid #888; border-radius: 3px; padding: 4px 14px; margin: 4px; cursor: pointer; font-family: inherit; }
-        .ie-content button:hover { background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%); }
-        .ie-content details { margin: 0.8em 0; background: #f9f9f9; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; }
-        .ie-content summary { font-weight: bold; cursor: pointer; outline: none; }
-        .ie-content kbd { background: #eee; border: 1px solid #aaa; border-radius: 3px; padding: 1px 5px; font-size: 0.9em; box-shadow: 1px 1px 1px rgba(0,0,0,0.2); }
-        .ie-statusbar {
-            background: #f0ead8;
-            border-top: 1px solid #c0b8a0;
-            padding: 3px 8px;
-            font-size: 10px;
-            color: #555;
-        }
-
-        .window-controls button {
-            width: 20px;
-            height: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .win-close-btn {
-            background: #d04030 !important;
-        }
+        /* HTML iframe */
+        .html-iframe { width: 100%; height: 100%; border: none; }
 
         /* 关机 */
-        #shutdown-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        #shutdown-overlay.visible {
-            display: flex;
-        }
-        #shutdown-dialog {
-            background: #ece9d8;
-            border: 2px solid #003399;
-            border-radius: 8px;
-            width: 380px;
-            padding: 20px;
-            text-align: center;
-        }
-        #full-shutdown-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #000;
-            z-index: 3000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            color: #ccc;
-            flex-direction: column;
-            cursor: pointer;
-        }
-        #full-shutdown-screen.visible {
-            display: flex;
-        }
+        #shutdown-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        #shutdown-overlay.visible { display: flex; }
+        #shutdown-dialog { background: #ece9d8; border: 2px solid #003399; border-radius: 8px; width: 380px; padding: 20px; text-align: center; animation: windowFadeIn 0.2s ease-out; }
+        #shutdown-dialog button { margin: 4px; padding: 6px 18px; }
+        #full-shutdown { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 3000; display: none; align-items: center; justify-content: center; color: #ccc; flex-direction: column; cursor: pointer; }
+        #full-shutdown.visible { display: flex; }
     </style>
 </head>
 <body>
-
-    <!-- 桌面 -->
     <div id="desktop"></div>
 
-    <!-- 任务栏 -->
     <div id="taskbar">
-        <button id="start-button">
-            <svg class="flag-icon" viewBox="0 0 24 24"><rect x="2" y="2" width="8" height="8" rx="1" fill="#FF6B35"/><rect x="12" y="2" width="10" height="8" rx="1" fill="#4CAF50"/><rect x="2" y="12" width="8" height="10" rx="1" fill="#2196F3"/><rect x="12" y="12" width="10" height="10" rx="1" fill="#FFC107"/></svg>
-            开始
-        </button>
-        <div class="taskbar-separator"></div>
+        <button id="start-btn">🖥️ 开始</button>
         <div id="taskbar-windows"></div>
-        <div class="taskbar-separator"></div>
-        <div id="system-tray">
-            <span>🔊</span>
-            <span id="clock-display"></span>
-        </div>
+        <span id="clock"></span>
     </div>
 
-    <!-- 开始菜单 -->
     <div id="start-menu">
-        <div class="menu-header">
-            <div class="user-avatar">👤</div>
-            <span>AI User</span>
-        </div>
-        <div class="menu-items">
-            <div class="menu-item" data-action="search"><span class="menu-icon">🔍</span>搜索</div>
-            <div class="menu-item" data-action="ie"><span class="menu-icon">🌐</span>Internet Explorer</div>
-            <div class="menu-divider"></div>
-            <div class="menu-item" data-action="shutdown"><span class="menu-icon">⏻</span>关机</div>
-        </div>
+        <div class="menu-item" data-action="search">🔍 搜索</div>
+        <div class="menu-item" data-action="shutdown">⏻ 关机</div>
     </div>
 
-    <!-- 搜索弹窗 -->
     <div id="search-overlay">
         <div id="search-modal">
             <div class="search-titlebar">
-                <span>🔍 搜索 — AI 驱动</span>
-                <button class="close-btn" id="search-close-btn">✕</button>
+                <span>🔍 搜索</span>
+                <button class="search-close" id="search-close">✕</button>
             </div>
             <div class="search-body">
                 <div class="search-input-row">
                     <input type="text" class="search-input" id="search-input" placeholder="输入搜索内容...">
-                    <button class="search-btn" id="search-submit-btn">搜索</button>
+                    <button class="search-btn" id="search-submit">搜索</button>
                 </div>
                 <div class="loading-indicator" id="search-loading">
                     <div class="loading-spinner"></div> AI 正在生成结果...
@@ -787,609 +125,409 @@
         </div>
     </div>
 
-    <!-- IE 窗口容器 -->
-    <div id="ie-windows-container"></div>
+    <div id="windows-container"></div>
 
-    <!-- 关机对话框 -->
     <div id="shutdown-overlay">
         <div id="shutdown-dialog">
             <h3>⏻ 关闭计算机</h3>
-            <p>您确定要关闭计算机吗？</p>
-            <button id="shutdown-confirm-btn">关机</button>
-            <button id="shutdown-cancel-btn">取消</button>
+            <p>确定要关机吗？</p>
+            <button id="shutdown-ok">关机</button>
+            <button id="shutdown-cancel">取消</button>
         </div>
     </div>
-
-    <div id="full-shutdown-screen">
+    <div id="full-shutdown">
         <div>Windows 正在关机...</div>
-        <div style="font-size:11px;opacity:0.6;">（点击任意位置重新启动）</div>
+        <div style="font-size:11px;opacity:0.5;">（点击任意位置重新启动）</div>
     </div>
 
     <script>
-        (function() {
-            // ---------- Markdown 配置 ----------
-            marked.setOptions({
-                gfm: true,
-                breaks: true,
-                pedantic: false,
-                smartLists: true,
-                smartypants: true
-            });
+        const desktop = document.getElementById('desktop');
+        const startBtn = document.getElementById('start-btn');
+        const startMenu = document.getElementById('start-menu');
+        const clockEl = document.getElementById('clock');
+        const searchOverlay = document.getElementById('search-overlay');
+        const searchInput = document.getElementById('search-input');
+        const searchSubmit = document.getElementById('search-submit');
+        const searchClose = document.getElementById('search-close');
+        const searchLoading = document.getElementById('search-loading');
+        const searchResults = document.getElementById('search-results');
+        const container = document.getElementById('windows-container');
+        const taskbarWindows = document.getElementById('taskbar-windows');
+        const shutdownOverlay = document.getElementById('shutdown-overlay');
+        const shutdownOk = document.getElementById('shutdown-ok');
+        const shutdownCancel = document.getElementById('shutdown-cancel');
+        const fullShutdown = document.getElementById('full-shutdown');
 
-            // ---------- DOM 元素 ----------
-            const desktop = document.getElementById('desktop');
-            const startBtn = document.getElementById('start-button');
-            const startMenu = document.getElementById('start-menu');
-            const taskbarWindows = document.getElementById('taskbar-windows');
-            const clockDisplay = document.getElementById('clock-display');
-            const searchOverlay = document.getElementById('search-overlay');
-            const searchInput = document.getElementById('search-input');
-            const searchSubmitBtn = document.getElementById('search-submit-btn');
-            const searchCloseBtn = document.getElementById('search-close-btn');
-            const searchLoading = document.getElementById('search-loading');
-            const searchResults = document.getElementById('search-results');
-            const ieContainer = document.getElementById('ie-windows-container');
-            const shutdownOverlay = document.getElementById('shutdown-overlay');
-            const shutdownConfirmBtn = document.getElementById('shutdown-confirm-btn');
-            const shutdownCancelBtn = document.getElementById('shutdown-cancel-btn');
-            const fullShutdownScreen = document.getElementById('full-shutdown-screen');
+        let startVisible = false;
+        let windows = [];
+        let activeId = null;
+        let zCounter = 500;
 
-            // ---------- 状态 ----------
-            let startMenuVisible = false;
-            let ieWindows = [];
-            let ieCounter = 0;
-            let activeWindowId = null;
-            let highestZ = 500;
+        function updateClock() {
+            const now = new Date();
+            const h = now.getHours(), m = now.getMinutes();
+            clockEl.textContent = `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? '下午' : '上午'}`;
+        }
+        updateClock(); setInterval(updateClock, 30000);
 
-            // ---------- 背景回退 ----------
-            const bgImg = new Image();
-            bgImg.onerror = () => desktop.classList.add('fallback-bg');
-            bgImg.src = 'https://upload.wikimedia.org/wikipedia/commons/0/05/Bliss_%28Windows_XP%29.png';
-            setTimeout(() => { if (!bgImg.complete || bgImg.naturalWidth === 0) desktop.classList.add(
-                'fallback-bg'); }, 4000);
-
-            // ---------- 时钟 ----------
-            function tick() {
-                const d = new Date();
-                const h = d.getHours();
-                const m = d.getMinutes();
-                const am = h >= 12 ? '下午' : '上午';
-                clockDisplay.textContent = `${am} ${h % 12 || 12}:${String(m).padStart(2, '0')}`;
-            }
-            tick();
-            setInterval(tick, 30000);
-
-            // ---------- 开始菜单 ----------
-            function toggleStartMenu() {
-                if (startMenuVisible) closeStartMenu();
-                else openStartMenu();
-            }
-
-            function openStartMenu() {
-                startMenu.classList.add('visible');
-                startMenuVisible = true;
-                startBtn.classList.add('active');
-                closeSearch();
-                closeShutdown();
-            }
-
-            function closeStartMenu() {
+        // 开始菜单
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startVisible = !startVisible;
+            startMenu.classList.toggle('visible', startVisible);
+        });
+        document.addEventListener('click', () => {
+            if (startVisible) { startVisible = false; startMenu.classList.remove('visible'); }
+        });
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                startVisible = false;
                 startMenu.classList.remove('visible');
-                startMenuVisible = false;
-                startBtn.classList.remove('active');
-            }
-
-            startBtn.addEventListener('click', (e) => { e.stopPropagation();
-                toggleStartMenu(); });
-            document.addEventListener('click', (e) => {
-                if (startMenuVisible && !startMenu.contains(e.target) && e.target !== startBtn) closeStartMenu
-                ();
+                if (item.dataset.action === 'search') openSearch();
+                else if (item.dataset.action === 'shutdown') openShutdown();
             });
+        });
 
-            // 菜单项
-            document.querySelectorAll('.menu-item[data-action]').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    closeStartMenu();
-                    const action = item.dataset.action;
-                    if (action === 'search') openSearch();
-                    else if (action === 'ie') openIE('Internet Explorer', '# 欢迎使用 IE\n\n请通过搜索获取内容。');
-                    else if (action === 'shutdown') openShutdown();
+        // 搜索
+        function openSearch() {
+            searchOverlay.classList.add('visible');
+            searchInput.value = '';
+            searchResults.classList.remove('visible');
+            searchLoading.classList.remove('visible');
+            searchInput.focus();
+        }
+        function closeSearch() { searchOverlay.classList.remove('visible'); }
+        searchClose.addEventListener('click', closeSearch);
+        searchOverlay.addEventListener('click', (e) => { if (e.target === searchOverlay) closeSearch(); });
+
+        async function doSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            searchResults.classList.remove('visible');
+            searchLoading.classList.add('visible');
+            try {
+                const res = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
                 });
-            });
-
-            // ---------- 搜索 ----------
-            function openSearch() {
-                searchOverlay.classList.add('visible');
-                searchResults.classList.remove('visible');
-                searchResults.innerHTML = '';
+                const data = await res.json();
+                renderResults(data.results || []);
+            } catch (err) {
+                searchResults.innerHTML = '<div style="padding:20px;color:red;">搜索失败</div>';
+                searchResults.classList.add('visible');
+            } finally {
                 searchLoading.classList.remove('visible');
-                searchInput.value = '';
-                setTimeout(() => searchInput.focus(), 100);
             }
+        }
+        searchSubmit.addEventListener('click', doSearch);
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
 
-            function closeSearch() {
-                searchOverlay.classList.remove('visible');
-            }
-
-            searchCloseBtn.addEventListener('click', closeSearch);
-            searchOverlay.addEventListener('click', (e) => { if (e.target === searchOverlay) closeSearch(); });
-
-            async function doSearch(query) {
-                if (!query.trim()) return;
-                searchResults.classList.remove('visible');
-                searchResults.innerHTML = '';
-                searchLoading.classList.add('visible');
-
-                try {
-                    const res = await fetch('/api/search', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: query.trim() })
-                    });
-                    if (!res.ok) throw new Error('搜索失败');
-                    const data = await res.json();
-                    renderResults(data.results);
-                } catch (err) {
-                    searchResults.innerHTML =
-                        '<div style="padding:20px;color:red;">搜索服务暂时不可用</div>';
-                } finally {
-                    searchLoading.classList.remove('visible');
-                    searchResults.classList.add('visible');
-                }
-            }
-
-            function renderResults(results) {
-                searchResults.innerHTML = '';
-                if (!results || results.length === 0) {
-                    searchResults.innerHTML = '<div style="padding:20px;">无结果</div>';
-                    return;
-                }
+        function renderResults(results) {
+            searchResults.innerHTML = '';
+            if (!results.length) {
+                searchResults.innerHTML = '<div style="padding:20px;">无结果</div>';
+            } else {
                 results.forEach(r => {
                     const div = document.createElement('div');
-                    div.className = 'search-result-item';
+                    div.className = 'result-item';
                     div.innerHTML = `
                         <div class="result-icon">${escapeHtml(r.icon || '📄')}</div>
                         <div style="flex:1;">
                             <div class="result-title">${escapeHtml(r.title)}</div>
-                            <div class="result-desc">${escapeHtml(r.description)}</div>
+                            <div class="result-desc">${escapeHtml(r.description || '')}</div>
                         </div>`;
-                    div.addEventListener('click', () => handleResultClick(r));
+                    div.addEventListener('click', () => {
+                        closeSearch();
+                        openHtmlWindow(r.title);
+                    });
                     searchResults.appendChild(div);
                 });
             }
+            searchResults.classList.add('visible');
+        }
 
-            async function handleResultClick(result) {
-                closeSearch();
-                const ieWin = openIE(result.title, '', true);
-                ieWin.searchQuery = searchInput.value.trim();
-                ieWin._resultTitle = result.title;
-                const winId = ieWin.id;
+        // 打开 HTML 窗口
+        function openHtmlWindow(title) {
+            const id = createWindow(title);
+            const body = document.getElementById(`body-${id}`);
+            body.innerHTML = '<div style="padding:20px;color:#888;">⏳ AI 正在生成 HTML 页面...</div>';
+            const instruction = `生成一个关于“${title}”的可运行 HTML 页面，必须包含真实按钮交互（onclick等），不能只有外观。直接返回完整 HTML 代码。`;
+            requestHtmlStream(id, instruction);
+        }
 
-                // 清空内容区，准备流式更新
-                const winData = ieWindows.find(w => w.id === winId);
-                if (!winData) return;
-                const contentEl = winData.element.querySelector('.ie-content');
-                contentEl.innerHTML = '<p style="color:#888;">⏳ AI 正在生成内容...</p>';
-
-                try {
-                    const response = await fetch('/api/content', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title: result.title, query: searchInput.value.trim() })
-                    });
-
-                    if (!response.ok) throw new Error('网络错误');
-
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let accumulatedText = '';
-                    let buffer = '';
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop() || '';
-
-                        for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                const data = line.slice(6);
-                                try {
-                                    const event = JSON.parse(data);
-                                        if (event.content) {
-                                            accumulatedText += event.content;
-                                            // 每次收到新 token 都用 marked 重新渲染累积全文
-                                            try {
-                                                contentEl.innerHTML = marked.parse(accumulatedText);
-                                            } catch (e) {
-                                                // 如果 marked 报错，暂时用纯文本
-                                                contentEl.innerHTML = `<pre>${escapeHtml(accumulatedText)}</pre>`;
-                                            }
-                                            applyMediaFallback(contentEl);
-                                            // 自动滚动到底部
-                                            contentEl.scrollTop = contentEl.scrollHeight;
-                                        }
-                                        if (event.done) {
-                                            // 流结束，用 marked 渲染最终内容
-                                            try {
-                                                contentEl.innerHTML = marked.parse(accumulatedText);
-                                            } catch (e) {
-                                                contentEl.innerHTML = `<pre>${escapeHtml(accumulatedText)}</pre>`;
-                                            }
-                                            applyMediaFallback(contentEl);
-                                            updateIEContentTitle(winId, result.title);
-                                            return;
-                                        }
-                                    if (event.error) {
-                                        contentEl.innerHTML = `<p style="color:red;">${escapeHtml(event.error)}</p>`;
-                                        return;
-                                    }
-                                } catch (e) {
-                                    // 忽略非 JSON 行
-                                }
-                            }
-                        }
-                    }
-                } catch (err) {
-                    const winData = ieWindows.find(w => w.id === winId);
-                    if (winData) {
-                        const contentEl = winData.element.querySelector('.ie-content');
-                        contentEl.innerHTML = '<p style="color:red;">内容加载失败，请稍后重试。</p>';
-                    }
-                }
-            }
-
-            searchSubmitBtn.addEventListener('click', () => doSearch(searchInput.value));
-            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(searchInput.value); });
-
-            // ---------- IE 窗口 ----------
-            function openIE(title, content, isPlaceholder = false) {
-                ieCounter++;
-                const id = 'ie-' + ieCounter;
-                const z = ++highestZ;
-                const win = {
-                    id,
-                    title,
-                    content,
-                    isPlaceholder,
-                    x: 60 + (ieWindows.length * 30) % 200,
-                    y: 50 + (ieWindows.length * 25) % 150,
-                    width: 680,
-                    height: 480,
-                    zIndex: z,
-                    minimized: false,
-                    element: null,
-                    taskbarBtn: null
-                };
-
-                // 创建 DOM
-                const el = document.createElement('div');
-                el.className = 'ie-window visible active-window';
-                el.id = id;
-                el.style.cssText =
-                    `left:${win.x}px;top:${win.y}px;width:${win.width}px;height:${win.height}px;z-index:${z}`;
-                el.innerHTML = `
-                    <div class="ie-titlebar">
-                        <span class="ie-title-text">🌐 <span class="ie-title-label">${escapeHtml(title)} — Internet Explorer</span></span>
-                        <div class="window-controls">
-                            <button class="win-min-btn">─</button>
-                            <button class="win-max-btn">□</button>
-                            <button class="win-close-btn">✕</button>
-                        </div>
+        function createWindow(title) {
+            const id = 'win-' + Date.now();
+            const z = ++zCounter;
+            const win = { id, title, history: [], element: null, taskbarBtn: null, lastCode: '', isMaximized: false, prevRect: null };
+            const el = document.createElement('div');
+            el.className = 'ai-window visible active';
+            el.id = id;
+            el.style.left = (60 + windows.length * 30) + 'px';
+            el.style.top = (50 + windows.length * 30) + 'px';
+            el.style.zIndex = z;
+            el.innerHTML = `
+                <div class="win-titlebar">
+                    <span>${escapeHtml(title)}</span>
+                    <div class="win-controls">
+                        <button class="win-ctrl-btn win-min" title="最小化">_</button>
+                        <button class="win-ctrl-btn win-max" title="最大化">□</button>
+                        <button class="win-ctrl-btn win-close" title="关闭">✕</button>
                     </div>
-                    <div class="ie-menubar"><span>文件</span><span>编辑</span><span>查看</span><span>收藏</span><span>工具</span><span>帮助</span></div>
-                    <div class="ie-toolbar"><button>后退</button><button>前进</button><button>刷新</button></div>
-                    <div class="ie-address-bar"><span>地址</span> <input class="addr-input" value="https://ai.xp/~${encodeURIComponent(title)}" readonly></div>
-                    <div class="ie-content"></div>
-                    <div class="ie-statusbar">\n                        <span class="ie-status-text" data-win-id="${win.id}">完成</span>\n                        <span class="status-section">Internet</span>\n                        <div style="flex:1;"></div>\n                        <input type="text" class="ie-chat-input" placeholder="输入消息..." autocomplete="off">\n                        <button class="ie-chat-send">发送</button>\n                    </div>`;
-                ieContainer.appendChild(el);
-                win.element = el;
+                </div>
+                <div class="win-body" id="body-${id}"></div>
+                <div class="win-input-bar">
+                    <input type="text" placeholder="输入指令修改页面..." id="input-${id}">
+                    <button id="send-${id}">发送</button>
+                </div>
+                <div class="code-preview" id="code-${id}"></div>`;
+            container.appendChild(el);
+            win.element = el;
 
-                // 任务栏按钮
-                const tbBtn = document.createElement('button');
-                tbBtn.className = 'taskbar-window-btn active-window';
-                tbBtn.innerHTML = `🌐 ${escapeHtml(title)}`;
-                tbBtn.addEventListener('click', () => {
-                    if (win.minimized) restoreIE(id);
-                    else if (activeWindowId === id) minimizeIE(id);
-                    else { restoreIE(id);
-                        setActive(id); }
-                });
-                taskbarWindows.appendChild(tbBtn);
-                win.taskbarBtn = tbBtn;
-
-                // 事件
-                el.addEventListener('mousedown', () => setActive(id));
-                el.querySelector('.win-close-btn').addEventListener('click', () => closeIE(id));
-                el.querySelector('.win-min-btn').addEventListener('click', () => minimizeIE(id));
-                el.querySelector('.win-max-btn').addEventListener('click', () => toggleMaximize(id));
-                // 拖拽
-                const titlebar = el.querySelector('.ie-titlebar');
-                titlebar.addEventListener('mousedown', (e) => {
-                    if (e.target.closest('button')) return;
-                    setActive(id);
-                    startDrag(win, e);
-                });
-
-                // IE 工具栏按钮
-                const toolbarEl = el.querySelector('.ie-toolbar');
-                if (toolbarEl) {
-                    const toolbarBtns = toolbarEl.querySelectorAll('button');
-                    // 后退按钮
-                    if (toolbarBtns[0]) {
-                        toolbarBtns[0].addEventListener('click', () => {
-                            // 简单效果：闪烁状态栏
-                            const sb = el.querySelector('.ie-statusbar');
-                            if (sb) sb.textContent = '后退功能暂未实现';
-                        });
-                    }
-                    // 前进按钮
-                    if (toolbarBtns[1]) {
-                        toolbarBtns[1].addEventListener('click', () => {
-                            const sb = el.querySelector('.ie-statusbar');
-                            if (sb) sb.textContent = '前进功能暂未实现';
-                        });
-                    }
-                    // 刷新按钮
-                    if (toolbarBtns[2]) {
-                        toolbarBtns[2].addEventListener('click', () => {
-                            const sb = el.querySelector('.ie-statusbar');
-                            if (sb) sb.textContent = '正在刷新...';
-                            const contentEl = el.querySelector('.ie-content');
-                            if (contentEl) contentEl.innerHTML = '<p>🔄 正在刷新...</p>';
-                            if (!win.isPlaceholder && win.content) {
-                                // 重新渲染已有内容
-                                try { contentEl.innerHTML = marked.parse(win.content); } catch (e) { contentEl.innerHTML = win.content; }
-                                applyMediaFallback(contentEl);
-                                if (sb) sb.textContent = '完成';
-                            } else {
-                                // 如果是 placeholder，重新触发搜索
-                                if (sb) sb.textContent = '刷新完成';
-                                contentEl.innerHTML = '<p style="color:#888;">⏳ 正在重新加载...</p>';
-                                if (win.searchQuery) {
-                                    doSearch(win.searchQuery, win._resultTitle);
-                                }
-                            }
-                        });
-                    }
-                }
-
-                ieWindows.push(win);
-                setActive(id);
-                renderContent(win);
-                return win;
-            }
-
-            function renderContent(win) {
-                const contentEl = win.element.querySelector('.ie-content');
-                if (contentEl) {
-                    try { contentEl.innerHTML = marked.parse(win.content); } catch (e) { contentEl.innerHTML = win
-                            .content; }
-                    applyMediaFallback(contentEl);
-                }
-            }
-
-            function updateIEContent(id, title, content) {
-                const win = ieWindows.find(w => w.id === id);
-                if (!win) return;
-                win.title = title;
-                win.content = content;
-                win.isPlaceholder = false;
-                win.element.querySelector('.ie-title-label').textContent = title + ' — Internet Explorer';
-                win.taskbarBtn.childNodes[1] && (win.taskbarBtn.childNodes[1].textContent = title);
-                win.element.querySelector('.addr-input').value = 'https://ai.xp/~' + encodeURIComponent(title);
-                renderContent(win);
-                setActive(id);
-            }
-
-            function updateIEContentTitle(winId, newTitle) {
-                const winData = ieWindows.find(w => w.id === winId);
-                if (!winData) return;
-                winData.title = newTitle;
-                const titleLabel = winData.element.querySelector('.ie-title-label');
-                if (titleLabel) titleLabel.textContent = newTitle + ' — Internet Explorer';
-                const tbLabel = winData.taskbarBtn?.querySelector('span:last-child');
-                if (tbLabel) tbLabel.textContent = newTitle;
-                if (winData.taskbarBtn) winData.taskbarBtn.title = newTitle + ' — Internet Explorer';
-                const addrInput = winData.element.querySelector('.addr-input');
-                if (addrInput) addrInput.value = 'https://ai.xp/~' + encodeURIComponent(newTitle);
-            }
-
-            function setActive(id) {
-                ieWindows.forEach(w => {
-                    const isActive = w.id === id;
-                    w.element.classList.toggle('active-window', isActive);
-                    w.element.classList.toggle('inactive', !isActive);
-                    w.taskbarBtn.classList.toggle('active-window', isActive);
-                    if (isActive) {
-                        w.zIndex = ++highestZ;
-                        w.element.style.zIndex = w.zIndex;
-                        activeWindowId = id;
-                        if (w.minimized) restoreIE(id);
-                    }
-                });
-            }
-
-            function minimizeIE(id) {
-                const win = ieWindows.find(w => w.id === id);
-                if (!win) return;
-                win.minimized = true;
-                win.element.style.display = 'none';
-                win.taskbarBtn.classList.remove('active-window');
-                if (activeWindowId === id) {
-                    activeWindowId = null;
-                    const visible = ieWindows.filter(w => !w.minimized && w.id !== id);
-                    if (visible.length) setActive(visible[visible.length - 1].id);
-                }
-            }
-
-            function restoreIE(id) {
-                const win = ieWindows.find(w => w.id === id);
-                if (!win) return;
-                win.minimized = false;
-                win.element.style.display = 'flex';
-                setActive(id);
-            }
-
-            function toggleMaximize(id) {
-                const win = ieWindows.find(w => w.id === id);
-                if (!win) return;
-                const tbHeight = document.getElementById('taskbar').offsetHeight;
-                if (win.width === window.innerWidth && win.height === window.innerHeight - tbHeight && win.x ===
-                    0 && win.y === 0) {
-                    win.width = 680;
-                    win.height = 480;
-                    win.x = 60;
-                    win.y = 50;
+            // 创建任务栏按钮
+            const tbBtn = document.createElement('button');
+            tbBtn.className = 'taskbar-btn active';
+            tbBtn.textContent = title;
+            tbBtn.addEventListener('click', () => {
+                if (win.element.style.display === 'none') {
+                    win.element.style.display = 'flex';
+                    tbBtn.classList.add('active');
+                    activateWindow(id);
+                } else if (activeId === id && !win.isMaximized) {
+                    minimizeWindow(id);
                 } else {
-                    win.width = window.innerWidth;
-                    win.height = window.innerHeight - tbHeight;
-                    win.x = 0;
-                    win.y = 0;
+                    activateWindow(id);
+                    if (win.isMaximized) restoreWindow(id);
                 }
-                win.element.style.left = win.x + 'px';
-                win.element.style.top = win.y + 'px';
-                win.element.style.width = win.width + 'px';
-                win.element.style.height = win.height + 'px';
-            }
+            });
+            taskbarWindows.appendChild(tbBtn);
+            win.taskbarBtn = tbBtn;
 
-            function closeIE(id) {
-                const idx = ieWindows.findIndex(w => w.id === id);
-                if (idx === -1) return;
-                const win = ieWindows[idx];
-                win.element.remove();
-                win.taskbarBtn.remove();
-                ieWindows.splice(idx, 1);
-                if (activeWindowId === id) {
-                    activeWindowId = null;
-                    if (ieWindows.length) setActive(ieWindows[ieWindows.length - 1].id);
-                }
-            }
+            // 窗口事件
+            el.querySelector('.win-close').addEventListener('click', () => closeWindow(id));
+            el.querySelector('.win-min').addEventListener('click', () => minimizeWindow(id));
+            el.querySelector('.win-max').addEventListener('click', () => toggleMaximize(id));
+            el.addEventListener('mousedown', () => activateWindow(id));
 
             // 拖拽
-            let dragState = null;
-
-            function startDrag(win, e) {
-                dragState = {
-                    win,
-                    mx: e.clientX,
-                    my: e.clientY,
-                    wx: win.x,
-                    wy: win.y
+            const titlebar = el.querySelector('.win-titlebar');
+            titlebar.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.win-ctrl-btn')) return;
+                if (win.isMaximized) return;
+                const startX = e.clientX, startY = e.clientY;
+                const origLeft = el.offsetLeft, origTop = el.offsetTop;
+                const move = (ev) => {
+                    el.style.left = (origLeft + ev.clientX - startX) + 'px';
+                    el.style.top = (origTop + ev.clientY - startY) + 'px';
                 };
-                document.addEventListener('mousemove', onDrag);
-                document.addEventListener('mouseup', stopDrag);
-            }
-
-            function onDrag(e) {
-                if (!dragState) return;
-                const dx = e.clientX - dragState.mx;
-                const dy = e.clientY - dragState.my;
-                dragState.win.x = Math.max(-100, dragState.wx + dx);
-                dragState.win.y = Math.max(-20, dragState.wy + dy);
-                dragState.win.element.style.left = dragState.win.x + 'px';
-                dragState.win.element.style.top = dragState.win.y + 'px';
-            }
-
-            function stopDrag() {
-                dragState = null;
-                document.removeEventListener('mousemove', onDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
-
-            // ---------- 关机 ----------
-            function openShutdown() {
-                shutdownOverlay.classList.add('visible');
-            }
-
-            function closeShutdown() {
-                shutdownOverlay.classList.remove('visible');
-            }
-
-            shutdownCancelBtn.addEventListener('click', closeShutdown);
-            shutdownConfirmBtn.addEventListener('click', () => {
-                closeShutdown();
-                fullShutdownScreen.classList.add('visible');
-            });
-            fullShutdownScreen.addEventListener('click', () => {
-                fullShutdownScreen.classList.remove('visible');
-                tick();
-                ieWindows.forEach(w => { if (!w.minimized) w.element.style.display = 'flex'; });
+                const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+                document.addEventListener('mousemove', move);
+                document.addEventListener('mouseup', up);
             });
 
-            // 快捷键
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    if (searchOverlay.classList.contains('visible')) closeSearch();
-                    else if (startMenuVisible) closeStartMenu();
-                    else closeShutdown();
-                }
-                if ((e.ctrlKey && e.shiftKey && e.key === 'F') || e.key === 'F3') {
-                    e.preventDefault();
-                    openSearch();
-                }
+            const input = el.querySelector(`#input-${id}`);
+            const sendBtn = el.querySelector(`#send-${id}`);
+            sendBtn.addEventListener('click', () => {
+                const instr = input.value.trim();
+                if (instr) { input.value = ''; requestHtmlStream(id, instr); }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { sendBtn.click(); }
             });
 
-            // 辅助
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
+            windows.push(win);
+            activateWindow(id);
+            return id;
+        }
 
-            // 媒体元素加载失败回退：用橙色文字替换
-            function applyMediaFallback(container) {
-                if (!container) return;
-                container.querySelectorAll('img').forEach(img => {
-                    if (img.dataset.fallbackBound) return;
-                    img.dataset.fallbackBound = 'true';
-                    img.addEventListener('error', () => {
-                        const altText = img.alt || img.src.split('/').pop() || '图片';
-                        const span = document.createElement('span');
-                        span.style.color = '#ff8c00';
-                        span.style.fontStyle = 'italic';
-                        span.textContent = '[' + altText + ' 加载失败]';
-                        img.parentNode?.replaceChild(span, img);
-                    });
+        function activateWindow(id) {
+            windows.forEach(w => {
+                w.element.classList.remove('active');
+                w.taskbarBtn.classList.remove('active');
+            });
+            const win = windows.find(w => w.id === id);
+            if (win) {
+                win.element.classList.add('active');
+                win.element.style.zIndex = ++zCounter;
+                win.taskbarBtn.classList.add('active');
+                activeId = id;
+            }
+        }
+
+        function minimizeWindow(id) {
+            const win = windows.find(w => w.id === id);
+            if (!win) return;
+            win.element.style.display = 'none';
+            win.taskbarBtn.classList.remove('active');
+            if (activeId === id) activeId = null;
+        }
+
+        function toggleMaximize(id) {
+            const win = windows.find(w => w.id === id);
+            if (!win) return;
+            if (win.isMaximized) {
+                restoreWindow(id);
+            } else {
+                maximizeWindow(id);
+            }
+        }
+
+        function maximizeWindow(id) {
+            const win = windows.find(w => w.id === id);
+            if (!win) return;
+            const el = win.element;
+            win.prevRect = { left: el.style.left, top: el.style.top, width: el.style.width, height: el.style.height };
+            el.style.left = '0';
+            el.style.top = '0';
+            el.style.width = '100%';
+            el.style.height = 'calc(100% - 40px)';
+            el.style.resize = 'none';
+            win.isMaximized = true;
+            el.querySelector('.win-max').textContent = '❐';
+        }
+
+        function restoreWindow(id) {
+            const win = windows.find(w => w.id === id);
+            if (!win || !win.prevRect) return;
+            const el = win.element;
+            el.style.left = win.prevRect.left;
+            el.style.top = win.prevRect.top;
+            el.style.width = win.prevRect.width;
+            el.style.height = win.prevRect.height;
+            el.style.resize = 'both';
+            win.isMaximized = false;
+            el.querySelector('.win-max').textContent = '□';
+        }
+
+        function closeWindow(id) {
+            const win = windows.find(w => w.id === id);
+            if (!win) return;
+            win.element.remove();
+            win.taskbarBtn.remove();
+            windows = windows.filter(w => w.id !== id);
+            if (activeId === id) activeId = null;
+        }
+
+        // 流式请求 HTML（带完整性检测与自动补全）
+        async function requestHtmlStream(winId, instruction) {
+            const win = windows.find(w => w.id === winId);
+            if (!win) return;
+            const body = document.getElementById(`body-${winId}`);
+            const codePreview = document.getElementById(`code-${winId}`);
+            body.innerHTML = '<div style="padding:20px;color:#888;">⏳ AI 正在生成 HTML 页面...</div>';
+            if (codePreview) codePreview.textContent = '';
+
+            const fetchStream = async () => {
+                return await fetch('/api/generate-html-stream', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instruction, history: win.history || [] })
                 });
-                container.querySelectorAll('video').forEach(video => {
-                    if (video.dataset.fallbackBound) return;
-                    video.dataset.fallbackBound = 'true';
-                    video.addEventListener('error', () => {
-                        const desc = video.getAttribute('title') || '视频';
-                        const span = document.createElement('span');
-                        span.style.color = '#ff8c00';
-                        span.style.fontStyle = 'italic';
-                        span.textContent = '[' + desc + ' 无法播放]';
-                        video.parentNode?.replaceChild(span, video);
-                    });
-                });
+            };
+
+            const processStream = async (response) => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let accumulatedCode = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            try {
+                                const event = JSON.parse(data);
+                                if (event.chunk) {
+                                    accumulatedCode = event.chunk;
+                                    if (codePreview) {
+                                        const allLines = accumulatedCode.split('\n');
+                                        const last3 = allLines.slice(-3).join('\n');
+                                        codePreview.textContent = last3;
+                                        codePreview.scrollTop = codePreview.scrollHeight;
+                                    }
+                                }
+                                if (event.done) {
+                                    const finalCode = event.fullCode || accumulatedCode;
+                                    const isComplete = event.isComplete !== false;
+
+                                    if (isComplete) {
+                                        renderFinalHtml(body, finalCode, win, instruction);
+                                    } else {
+                                        // 不完整，自动补全
+                                        body.innerHTML = '<div style="padding:20px;color:orange;">⚠️ 页面不完整，正在补全...</div>';
+                                        const continuation = `请继续完成以下 HTML 代码，确保以 </html> 结束。当前代码：\n\`\`\`html\n${finalCode}\n\`\`\``;
+                                        try {
+                                            const res2 = await fetch('/api/generate-html-stream', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ instruction: continuation, history: [] })
+                                            });
+                                            await processStream(res2);
+                                        } catch (e) {
+                                            body.innerHTML = '<div style="padding:20px;color:red;">补全失败，请重试</div>';
+                                        }
+                                    }
+                                    return;
+                                }
+                                if (event.error) {
+                                    body.innerHTML = `<div style="padding:20px;color:red;">${event.error}</div>`;
+                                    return;
+                                }
+                            } catch (e) { /* 忽略 */ }
+                        }
+                    }
+                }
+            };
+
+            function renderFinalHtml(container, code, winObj, instr) {
+                container.innerHTML = '';
+                const iframe = document.createElement('iframe');
+                iframe.className = 'html-iframe';
+                iframe.sandbox = 'allow-scripts allow-modals allow-forms allow-popups allow-same-origin';
+                iframe.srcdoc = code;
+                container.appendChild(iframe);
+                winObj.history = [...(winObj.history || []), { role: 'user', content: instr }, { role: 'assistant', content: code }];
             }
 
-            // 前端模拟内容生成（AI 回退用）
-            function getMockContentFromHtml(title, query) {
-                return `# ${title}
-
-## 概述
-这是关于 **"${title}"** 的详细内容页面。  
-您搜索的关键词为：*${query}*。
-
-## 背景
-该主题涵盖了多个维度的信息。
-
-### 关键点
-- 数据来源：综合多个权威渠道
-- 相关性：与您的搜索高度匹配
-- 生成时间：${new Date().toLocaleString('zh-CN')}
-
-## 说明
-当前使用模拟数据进行演示。如需真实 AI 生成，请在 \`.env\` 中设置 \`ENABLE_AI=true\`。`;
+            try {
+                const response = await fetchStream();
+                await processStream(response);
+            } catch (err) {
+                body.innerHTML = '<div style="padding:20px;color:red;">生成失败，请重试</div>';
+                console.error(err);
             }
+        }
 
-            console.log('🖥️ Windows XP AI Desktop 已启动');
-        })();
+        // 关机
+        function openShutdown() { shutdownOverlay.classList.add('visible'); }
+        function closeShutdown() { shutdownOverlay.classList.remove('visible'); }
+        shutdownCancel.addEventListener('click', closeShutdown);
+        shutdownOk.addEventListener('click', () => {
+            closeShutdown();
+            fullShutdown.classList.add('visible');
+        });
+        fullShutdown.addEventListener('click', () => {
+            fullShutdown.classList.remove('visible');
+            updateClock();
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        const bgImg = new Image();
+        bgImg.onerror = () => desktop.classList.add('fallback-bg');
+        bgImg.src = 'https://upload.wikimedia.org/wikipedia/commons/0/05/Bliss_%28Windows_XP%29.png';
+        setTimeout(() => { if (!bgImg.complete || bgImg.naturalWidth === 0) desktop.classList.add('fallback-bg'); }, 4000);
     </script>
 </body>
 </html>
