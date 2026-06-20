@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows XP — AI Desktop</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+    </script>
+    <style>
+        :root {
+            --taskbar-blue-start: #1a4b8c;
+            --taskbar-blue-mid: #3a6bc5;
+            --taskbar-blue-end: #1a4b8c;
+            --win-title-active-start: #0058e6;
+            --win-title-active-end: #3a8cf5;
+            --win-title-inactive-start: #7b9cc4;
+            --win-title-inactive-end: #b5c7de;
+            --start-btn-green-start: #3c9a3c;
+            --start-btn-green-end: #2d7a2d;
+            --start-btn-hover-start: #4ab84a;
+            --start-btn-hover-end: #3a9a3a;
+            --menu-bg: #ffffff;
+            --menu-border: #003399;
+            --menu-hover: #316ac5;
+            --menu-hover-text: #ffffff;
+            --window-bg: #ece9d8;
+            --button-face: #ece9d8;
+            --button-highlight: #ffffff;
+            --button-shadow: #aca899;
+            --button-dark-shadow: #716f64;
+            --text-color: #000000;
+            --sys-tray-bg: #1e5bb5;
+            --sys-tray-time: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tahoma', 'Microsoft Sans Serif', 'Segoe UI', sans-serif;
+            font-size: 11px;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
+            background: #000;
+        }
+
+        /* 桌面 */
+        #desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 40px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/05/Bliss_%28Windows_XP%29.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+
+        #desktop.fallback-bg {
+            background-image: none;
+            background: linear-gradient(180deg,
+                    #87CEEB 0%, #87CEEB 35%,
+                    #7ec856 35%, #5da832 55%,
+                    #4a8e2a 55%, #3d7722 70%,
+                    #5a9e35 70%, #8bc34a 100%);
+        }
+
+        /* 任务栏 */
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(180deg,
+                    #3573c9 0%, #2b5eb0 3px,
+                    #1e4d9e 3px, #2560b8 50%,
+                    #1b4a8c 50%, #1a4480 100%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 2px;
+            box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.3) inset,
+                0 -2px 0 rgba(0, 0, 0, 0.15);
+            border-top: 1px solid #4a80d0;
+        }
+
+        #start-button {
+            height: 34px;
+            min-width: 100px;
+            padding: 0 18px 0 14px;
+            border: none;
+            border-radius: 0 12px 12px 0;
+            background: linear-gradient(180deg,
+                    #4caf4c 0%, #3d9a3d 40%,
+                    #2e7d2e 40%, #256b25 100%);
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+            font-family: 'Tahoma', sans-serif;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 1px 1px rgba(255, 255, 255, 0.4) inset,
+                2px 0 4px rgba(0, 0, 0, 0.3);
+            transition: filter 0.08s;
+            flex-shrink: 0;
+            margin-left: 1px;
+        }
+        #start-button:hover {
+            filter: brightness(1.15);
+        }
+        #start-button:active,
+        #start-button.active {
+            filter: brightness(0.85);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) inset;
+        }
+        #start-button .flag-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+        }
+
+        .taskbar-separator {
+            width: 2px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 3px;
+            border-left: 1px solid rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        #taskbar-windows {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 0 6px;
+            overflow-x: auto;
+            min-width: 0;
+            height: 100%;
+        }
+        .taskbar-window-btn {
+            height: 28px;
+            min-width: 140px;
+            max-width: 200px;
+            padding: 0 12px;
+            background: linear-gradient(180deg,
+                    #4a7cc9 0%, #3565b0 50%,
+                    #2d5599 50%, #234780 100%);
+            border: 1px solid #1a3d6e;
+            border-radius: 3px;
+            color: #fff;
+            font-size: 11px;
+            font-family: 'Tahoma', sans-serif;
+            cursor: pointer;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2) inset;
+            transition: background 0.1s;
+        }
+        .taskbar-window-btn:hover {
+            background: linear-gradient(180deg,
+                    #5a8cd9 0%, #4575c0 50%,
+                    #3d65a9 50%, #345890 100%);
+        }
+        .taskbar-window-btn.active-window {
+            background: linear-gradient(180deg,
+                    #3a6bc5 0%, #2b5599 50%,
+                    #1e4480 50%, #163668 100%);
+            border-color: #0f2440;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3) inset;
+        }
+        .taskbar-window-btn .tb-win-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        #system-tray {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 8px 0 4px;
+            height: 34px;
+            background: rgba(30, 80, 170, 0.6);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px 0 0 2px;
+            flex-shrink: 0;
+            margin-right: 2px;
+        }
+        #system-tray .tray-icons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding-right: 6px;
+        }
+        #system-tray .tray-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.9;
+        }
+        #clock-display {
+            color: #fff;
+            font-size: 11px;
+            font-family: 'Tahoma', sans-serif;
+            white-space: nowrap;
+            padding: 2px 4px;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+            letter-spacing: 0.3px;
+        }
+
+        /* 开始菜单 */
+        #start-menu {
+            position: fixed;
+            bottom: 42px;
+            left: 4px;
+            width: 390px;
+            max-width: 95vw;
+            background: #fff;
+            border: 2px solid #003399;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            display: none;
+            overflow: hidden;
+            font-family: 'Tahoma', sans-serif;
+        }
+        #start-menu.visible {
+            display: block;
+            animation: menuAppear 0.12s ease-out;
+        }
+        @keyframes menuAppear {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #start-menu .menu-header {
+            background: linear-gradient(180deg, #1a6dd4 0%, #0d4fa8 100%);
+            padding: 10px 14px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.3px;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+        }
+        #start-menu .menu-header .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 6px;
+            background: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        #start-menu .menu-items {
+            padding: 4px 0;
+            background: #fff;
+            border-top: 1px solid #d0d0d0;
+        }
+        #start-menu .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #1a1a1a;
+            transition: background 0.06s, color 0.06s;
+        }
+        #start-menu .menu-item:hover {
+            background: #316ac5;
+            color: #fff;
+        }
+        #start-menu .menu-item .menu-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            border-radius: 3px;
+        }
+        #start-menu .menu-divider {
+            height: 1px;
+            background: #d0d0d0;
+            margin: 3px 10px;
+        }
+        #start-menu .menu-footer {
+            background: #f0f0f0;
+            border-top: 1px solid #d0d0d0;
+            padding: 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #start-menu .menu-footer .footer-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 14px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #1a1a1a;
+            border-radius: 3px;
+            transition: background 0.06s;
+        }
+        #start-menu .menu-footer .footer-btn:hover {
+            background: #316ac5;
+            color: #fff;
+        }
+
+        /* 搜索弹窗 */
+        #search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 40px;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 800;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 8vh;
+        }
+        #search-overlay.visible {
+            display: flex;
+        }
+        #search-modal {
+            background: #fff;
+            border: 2px solid #003399;
+            border-radius: 8px;
+            box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.6);
+            width: 520px;
+            max-width: 92vw;
+            max-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Tahoma', sans-serif;
+            animation: modalSlideIn 0.2s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        #search-modal .search-titlebar {
+            background: linear-gradient(180deg, #0058e6 0%, #3a8cf5 40%, #2b7aee 50%, #1a60d0 100%);
+            padding: 6px 10px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 4px 4px 0 0;
+        }
+        #search-modal .search-titlebar .close-btn {
+            width: 20px;
+            height: 20px;
+            background: #d04030;
+            border: 1px solid #8b1a10;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+            font-weight: bold;
+            line-height: 1;
+            transition: filter 0.08s;
+            flex-shrink: 0;
+        }
+        #search-modal .search-body {
+            padding: 16px;
+            background: #ece9d8;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .search-input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 7px 10px;
+            border: 1px solid #7f9db9;
+            border-radius: 3px;
+            font-size: 13px;
+            font-family: 'Tahoma', sans-serif;
+            background: #fff;
+            outline: none;
+        }
+        .search-btn {
+            padding: 7px 18px;
+            background: linear-gradient(180deg, #f8f8f8 0%, #e0e0e0 50%, #d0d0d0 50%, #c8c8c8 100%);
+            border: 1px solid #7f9db9;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Tahoma', sans-serif;
+            white-space: nowrap;
+        }
+        .loading-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 30px;
+            color: #555;
+        }
+        .loading-indicator.visible {
+            display: flex;
+        }
+        .loading-spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid #d0d0d0;
+            border-top-color: #316ac5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .results-area {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 12px;
+            background: #fff;
+            border: 1px solid #c0c0c0;
+            border-radius: 3px;
+            padding: 4px;
+            display: none;
+            max-height: 50vh;
+        }
+        .results-area.visible {
+            display: block;
+        }
+        .search-result-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #e8e8e8;
+            align-items: flex-start;
+        }
+        .search-result-item:hover {
+            background: #e8f0fa;
+        }
+        .result-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            background: #f0f4f8;
+            border-radius: 4px;
+        }
+        .result-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: #1a3d8f;
+            text-decoration: underline;
+        }
+        .result-desc {
+            font-size: 11px;
+            color: #444;
+        }
+
+        /* IE 窗口 */
+        .ie-window {
+            position: fixed;
+            width: 700px;
+            height: 500px;
+            background: #fff;
+            border: 2px solid #003399;
+            border-radius: 8px 8px 4px 4px;
+            box-shadow: 4px 4px 18px rgba(0, 0, 0, 0.5);
+            z-index: 500;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Tahoma', sans-serif;
+            resize: both;
+        }
+        .ie-window.visible {
+            display: flex;
+        }
+        .ie-window.active-window {
+            z-index: 600;
+        }
+        .ie-titlebar {
+            background: linear-gradient(180deg, #0058e6 0%, #3a8cf5 40%, #2b7aee 50%, #1a60d0 100%);
+            padding: 5px 8px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ie-window.inactive .ie-titlebar {
+            background: linear-gradient(180deg, #7b9cc4 0%, #b5c7de 40%, #9db5d4 50%, #8aa8c8 100%);
+        }
+        .ie-title-text {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            overflow: hidden;
+        }
+        .ie-menubar {
+            background: #f0ead8;
+            border-bottom: 1px solid #c0b8a0;
+            padding: 2px 6px;
+            display: flex;
+            gap: 2px;
+            font-size: 11px;
+        }
+        .ie-toolbar {
+            background: #f8f4e8;
+            border-bottom: 1px solid #c0b8a0;
+            padding: 4px 6px;
+            display: flex;
+            gap: 4px;
+        }
+        .ie-address-bar {
+            background: #f8f4e8;
+            padding: 4px 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #c0b8a0;
+        }
+        .ie-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            background: #fff;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #1a1a1a;
+        }
+        .ie-statusbar {
+            background: #f0ead8;
+            border-top: 1px solid #c0b8a0;
+            padding: 3px 8px;
+            font-size: 10px;
+            color: #555;
+        }
+
+        .window-controls button {
+            width: 20px;
+            height: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .win-close-btn {
+            background: #d04030 !important;
+        }
+
+        /* 关机 */
+        #shutdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        #shutdown-overlay.visible {
+            display: flex;
+        }
+        #shutdown-dialog {
+            background: #ece9d8;
+            border: 2px solid #003399;
+            border-radius: 8px;
+            width: 380px;
+            padding: 20px;
+            text-align: center;
+        }
+        #full-shutdown-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #ccc;
+            flex-direction: column;
+            cursor: pointer;
+        }
+        #full-shutdown-screen.visible {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 桌面 -->
+    <div id="desktop"></div>
+
+    <!-- 任务栏 -->
+    <div id="taskbar">
+        <button id="start-button">
+            <svg class="flag-icon" viewBox="0 0 24 24"><rect x="2" y="2" width="8" height="8" rx="1" fill="#FF6B35"/><rect x="12" y="2" width="10" height="8" rx="1" fill="#4CAF50"/><rect x="2" y="12" width="8" height="10" rx="1" fill="#2196F3"/><rect x="12" y="12" width="10" height="10" rx="1" fill="#FFC107"/></svg>
+            开始
+        </button>
+        <div class="taskbar-separator"></div>
+        <div id="taskbar-windows"></div>
+        <div class="taskbar-separator"></div>
+        <div id="system-tray">
+            <span>🔊</span>
+            <span id="clock-display"></span>
+        </div>
+    </div>
+
+    <!-- 开始菜单 -->
+    <div id="start-menu">
+        <div class="menu-header">
+            <div class="user-avatar">👤</div>
+            <span>AI User</span>
+        </div>
+        <div class="menu-items">
+            <div class="menu-item" data-action="search"><span class="menu-icon">🔍</span>搜索</div>
+            <div class="menu-item" data-action="ie"><span class="menu-icon">🌐</span>Internet Explorer</div>
+            <div class="menu-divider"></div>
+            <div class="menu-item" data-action="shutdown"><span class="menu-icon">⏻</span>关机</div>
+        </div>
+    </div>
+
+    <!-- 搜索弹窗 -->
+    <div id="search-overlay">
+        <div id="search-modal">
+            <div class="search-titlebar">
+                <span>🔍 搜索 — AI 驱动</span>
+                <button class="close-btn" id="search-close-btn">✕</button>
+            </div>
+            <div class="search-body">
+                <div class="search-input-row">
+                    <input type="text" class="search-input" id="search-input" placeholder="输入搜索内容...">
+                    <button class="search-btn" id="search-submit-btn">搜索</button>
+                </div>
+                <div class="loading-indicator" id="search-loading">
+                    <div class="loading-spinner"></div> AI 正在生成结果...
+                </div>
+                <div class="results-area" id="search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IE 窗口容器 -->
+    <div id="ie-windows-container"></div>
+
+    <!-- 关机对话框 -->
+    <div id="shutdown-overlay">
+        <div id="shutdown-dialog">
+            <h3>⏻ 关闭计算机</h3>
+            <p>您确定要关闭计算机吗？</p>
+            <button id="shutdown-confirm-btn">关机</button>
+            <button id="shutdown-cancel-btn">取消</button>
+        </div>
+    </div>
+
+    <div id="full-shutdown-screen">
+        <div>Windows 正在关机...</div>
+        <div style="font-size:11px;opacity:0.6;">（点击任意位置重新启动）</div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- DOM 元素 ----------
+            const desktop = document.getElementById('desktop');
+            const startBtn = document.getElementById('start-button');
+            const startMenu = document.getElementById('start-menu');
+            const taskbarWindows = document.getElementById('taskbar-windows');
+            const clockDisplay = document.getElementById('clock-display');
+            const searchOverlay = document.getElementById('search-overlay');
+            const searchInput = document.getElementById('search-input');
+            const searchSubmitBtn = document.getElementById('search-submit-btn');
+            const searchCloseBtn = document.getElementById('search-close-btn');
+            const searchLoading = document.getElementById('search-loading');
+            const searchResults = document.getElementById('search-results');
+            const ieContainer = document.getElementById('ie-windows-container');
+            const shutdownOverlay = document.getElementById('shutdown-overlay');
+            const shutdownConfirmBtn = document.getElementById('shutdown-confirm-btn');
+            const shutdownCancelBtn = document.getElementById('shutdown-cancel-btn');
+            const fullShutdownScreen = document.getElementById('full-shutdown-screen');
+
+            // ---------- 状态 ----------
+            let startMenuVisible = false;
+            let ieWindows = [];
+            let ieCounter = 0;
+            let activeWindowId = null;
+            let highestZ = 500;
+
+            // ---------- 背景回退 ----------
+            const bgImg = new Image();
+            bgImg.onerror = () => desktop.classList.add('fallback-bg');
+            bgImg.src = 'https://upload.wikimedia.org/wikipedia/commons/0/05/Bliss_%28Windows_XP%29.png';
+            setTimeout(() => { if (!bgImg.complete || bgImg.naturalWidth === 0) desktop.classList.add(
+                'fallback-bg'); }, 4000);
+
+            // ---------- 时钟 ----------
+            function tick() {
+                const d = new Date();
+                const h = d.getHours();
+                const m = d.getMinutes();
+                const am = h >= 12 ? '下午' : '上午';
+                clockDisplay.textContent = `${am} ${h % 12 || 12}:${String(m).padStart(2, '0')}`;
+            }
+            tick();
+            setInterval(tick, 30000);
+
+            // ---------- 开始菜单 ----------
+            function toggleStartMenu() {
+                if (startMenuVisible) closeStartMenu();
+                else openStartMenu();
+            }
+
+            function openStartMenu() {
+                startMenu.classList.add('visible');
+                startMenuVisible = true;
+                startBtn.classList.add('active');
+                closeSearch();
+                closeShutdown();
+            }
+
+            function closeStartMenu() {
+                startMenu.classList.remove('visible');
+                startMenuVisible = false;
+                startBtn.classList.remove('active');
+            }
+
+            startBtn.addEventListener('click', (e) => { e.stopPropagation();
+                toggleStartMenu(); });
+            document.addEventListener('click', (e) => {
+                if (startMenuVisible && !startMenu.contains(e.target) && e.target !== startBtn) closeStartMenu
+                ();
+            });
+
+            // 菜单项
+            document.querySelectorAll('.menu-item[data-action]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    closeStartMenu();
+                    const action = item.dataset.action;
+                    if (action === 'search') openSearch();
+                    else if (action === 'ie') openIE('Internet Explorer', '# 欢迎使用 IE\n\n请通过搜索获取内容。');
+                    else if (action === 'shutdown') openShutdown();
+                });
+            });
+
+            // ---------- 搜索 ----------
+            function openSearch() {
+                searchOverlay.classList.add('visible');
+                searchResults.classList.remove('visible');
+                searchResults.innerHTML = '';
+                searchLoading.classList.remove('visible');
+                searchInput.value = '';
+                setTimeout(() => searchInput.focus(), 100);
+            }
+
+            function closeSearch() {
+                searchOverlay.classList.remove('visible');
+            }
+
+            searchCloseBtn.addEventListener('click', closeSearch);
+            searchOverlay.addEventListener('click', (e) => { if (e.target === searchOverlay) closeSearch(); });
+
+            async function doSearch(query) {
+                if (!query.trim()) return;
+                searchResults.classList.remove('visible');
+                searchResults.innerHTML = '';
+                searchLoading.classList.add('visible');
+
+                try {
+                    const res = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: query.trim() })
+                    });
+                    if (!res.ok) throw new Error('搜索失败');
+                    const data = await res.json();
+                    renderResults(data.results);
+                } catch (err) {
+                    searchResults.innerHTML =
+                        '<div style="padding:20px;color:red;">搜索服务暂时不可用</div>';
+                } finally {
+                    searchLoading.classList.remove('visible');
+                    searchResults.classList.add('visible');
+                }
+            }
+
+            function renderResults(results) {
+                searchResults.innerHTML = '';
+                if (!results || results.length === 0) {
+                    searchResults.innerHTML = '<div style="padding:20px;">无结果</div>';
+                    return;
+                }
+                results.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.innerHTML = `
+                        <div class="result-icon">${escapeHtml(r.icon || '📄')}</div>
+                        <div style="flex:1;">
+                            <div class="result-title">${escapeHtml(r.title)}</div>
+                            <div class="result-desc">${escapeHtml(r.description)}</div>
+                        </div>`;
+                    div.addEventListener('click', () => handleResultClick(r));
+                    searchResults.appendChild(div);
+                });
+            }
+
+            async function handleResultClick(result) {
+                closeSearch();
+                const ie = openIE(result.title, '<p>⏳ AI 正在生成内容...</p>', true);
+                try {
+                    const res = await fetch('/api/content', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: result.title, query: searchInput.value.trim() })
+                    });
+                    if (!res.ok) throw new Error('内容生成失败');
+                    const data = await res.json();
+                    updateIEContent(ie.id, result.title, data.content);
+                } catch (err) {
+                    updateIEContent(ie.id, result.title, '# 内容加载失败\n\n请稍后重试。');
+                }
+            }
+
+            searchSubmitBtn.addEventListener('click', () => doSearch(searchInput.value));
+            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(searchInput.value); });
+
+            // ---------- IE 窗口 ----------
+            function openIE(title, content, isPlaceholder = false) {
+                ieCounter++;
+                const id = 'ie-' + ieCounter;
+                const z = ++highestZ;
+                const win = {
+                    id,
+                    title,
+                    content,
+                    isPlaceholder,
+                    x: 60 + (ieWindows.length * 30) % 200,
+                    y: 50 + (ieWindows.length * 25) % 150,
+                    width: 680,
+                    height: 480,
+                    zIndex: z,
+                    minimized: false,
+                    element: null,
+                    taskbarBtn: null
+                };
+
+                // 创建 DOM
+                const el = document.createElement('div');
+                el.className = 'ie-window visible active-window';
+                el.id = id;
+                el.style.cssText =
+                    `left:${win.x}px;top:${win.y}px;width:${win.width}px;height:${win.height}px;z-index:${z}`;
+                el.innerHTML = `
+                    <div class="ie-titlebar">
+                        <span class="ie-title-text">🌐 <span class="ie-title-label">${escapeHtml(title)} — Internet Explorer</span></span>
+                        <div class="window-controls">
+                            <button class="win-min-btn">─</button>
+                            <button class="win-max-btn">□</button>
+                            <button class="win-close-btn">✕</button>
+                        </div>
+                    </div>
+                    <div class="ie-menubar"><span>文件</span><span>编辑</span><span>查看</span><span>收藏</span><span>工具</span><span>帮助</span></div>
+                    <div class="ie-toolbar"><button>后退</button><button>前进</button><button>刷新</button></div>
+                    <div class="ie-address-bar"><span>地址</span> <input class="addr-input" value="https://ai.xp/~${encodeURIComponent(title)}" readonly></div>
+                    <div class="ie-content"></div>
+                    <div class="ie-statusbar">完成</div>`;
+                ieContainer.appendChild(el);
+                win.element = el;
+
+                // 任务栏按钮
+                const tbBtn = document.createElement('button');
+                tbBtn.className = 'taskbar-window-btn active-window';
+                tbBtn.innerHTML = `🌐 ${escapeHtml(title)}`;
+                tbBtn.addEventListener('click', () => {
+                    if (win.minimized) restoreIE(id);
+                    else if (activeWindowId === id) minimizeIE(id);
+                    else { restoreIE(id);
+                        setActive(id); }
+                });
+                taskbarWindows.appendChild(tbBtn);
+                win.taskbarBtn = tbBtn;
+
+                // 事件
+                el.addEventListener('mousedown', () => setActive(id));
+                el.querySelector('.win-close-btn').addEventListener('click', () => closeIE(id));
+                el.querySelector('.win-min-btn').addEventListener('click', () => minimizeIE(id));
+                el.querySelector('.win-max-btn').addEventListener('click', () => toggleMaximize(id));
+                // 拖拽
+                const titlebar = el.querySelector('.ie-titlebar');
+                titlebar.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('button')) return;
+                    setActive(id);
+                    startDrag(win, e);
+                });
+
+                ieWindows.push(win);
+                setActive(id);
+                renderContent(win);
+                return win;
+            }
+
+            function renderContent(win) {
+                const contentEl = win.element.querySelector('.ie-content');
+                if (contentEl) {
+                    try { contentEl.innerHTML = marked.parse(win.content); } catch (e) { contentEl.innerHTML = win
+                            .content; }
+                }
+            }
+
+            function updateIEContent(id, title, content) {
+                const win = ieWindows.find(w => w.id === id);
+                if (!win) return;
+                win.title = title;
+                win.content = content;
+                win.isPlaceholder = false;
+                win.element.querySelector('.ie-title-label').textContent = title + ' — Internet Explorer';
+                win.taskbarBtn.childNodes[1] && (win.taskbarBtn.childNodes[1].textContent = title);
+                win.element.querySelector('.addr-input').value = 'https://ai.xp/~' + encodeURIComponent(title);
+                renderContent(win);
+                setActive(id);
+            }
+
+            function setActive(id) {
+                ieWindows.forEach(w => {
+                    const isActive = w.id === id;
+                    w.element.classList.toggle('active-window', isActive);
+                    w.element.classList.toggle('inactive', !isActive);
+                    w.taskbarBtn.classList.toggle('active-window', isActive);
+                    if (isActive) {
+                        w.zIndex = ++highestZ;
+                        w.element.style.zIndex = w.zIndex;
+                        activeWindowId = id;
+                        if (w.minimized) restoreIE(id);
+                    }
+                });
+            }
+
+            function minimizeIE(id) {
+                const win = ieWindows.find(w => w.id === id);
+                if (!win) return;
+                win.minimized = true;
+                win.element.style.display = 'none';
+                win.taskbarBtn.classList.remove('active-window');
+                if (activeWindowId === id) {
+                    activeWindowId = null;
+                    const visible = ieWindows.filter(w => !w.minimized && w.id !== id);
+                    if (visible.length) setActive(visible[visible.length - 1].id);
+                }
+            }
+
+            function restoreIE(id) {
+                const win = ieWindows.find(w => w.id === id);
+                if (!win) return;
+                win.minimized = false;
+                win.element.style.display = 'flex';
+                setActive(id);
+            }
+
+            function toggleMaximize(id) {
+                const win = ieWindows.find(w => w.id === id);
+                if (!win) return;
+                const tbHeight = document.getElementById('taskbar').offsetHeight;
+                if (win.width === window.innerWidth && win.height === window.innerHeight - tbHeight && win.x ===
+                    0 && win.y === 0) {
+                    win.width = 680;
+                    win.height = 480;
+                    win.x = 60;
+                    win.y = 50;
+                } else {
+                    win.width = window.innerWidth;
+                    win.height = window.innerHeight - tbHeight;
+                    win.x = 0;
+                    win.y = 0;
+                }
+                win.element.style.left = win.x + 'px';
+                win.element.style.top = win.y + 'px';
+                win.element.style.width = win.width + 'px';
+                win.element.style.height = win.height + 'px';
+            }
+
+            function closeIE(id) {
+                const idx = ieWindows.findIndex(w => w.id === id);
+                if (idx === -1) return;
+                const win = ieWindows[idx];
+                win.element.remove();
+                win.taskbarBtn.remove();
+                ieWindows.splice(idx, 1);
+                if (activeWindowId === id) {
+                    activeWindowId = null;
+                    if (ieWindows.length) setActive(ieWindows[ieWindows.length - 1].id);
+                }
+            }
+
+            // 拖拽
+            let dragState = null;
+
+            function startDrag(win, e) {
+                dragState = {
+                    win,
+                    mx: e.clientX,
+                    my: e.clientY,
+                    wx: win.x,
+                    wy: win.y
+                };
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+
+            function onDrag(e) {
+                if (!dragState) return;
+                const dx = e.clientX - dragState.mx;
+                const dy = e.clientY - dragState.my;
+                dragState.win.x = Math.max(-100, dragState.wx + dx);
+                dragState.win.y = Math.max(-20, dragState.wy + dy);
+                dragState.win.element.style.left = dragState.win.x + 'px';
+                dragState.win.element.style.top = dragState.win.y + 'px';
+            }
+
+            function stopDrag() {
+                dragState = null;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            // ---------- 关机 ----------
+            function openShutdown() {
+                shutdownOverlay.classList.add('visible');
+            }
+
+            function closeShutdown() {
+                shutdownOverlay.classList.remove('visible');
+            }
+
+            shutdownCancelBtn.addEventListener('click', closeShutdown);
+            shutdownConfirmBtn.addEventListener('click', () => {
+                closeShutdown();
+                fullShutdownScreen.classList.add('visible');
+            });
+            fullShutdownScreen.addEventListener('click', () => {
+                fullShutdownScreen.classList.remove('visible');
+                tick();
+                ieWindows.forEach(w => { if (!w.minimized) w.element.style.display = 'flex'; });
+            });
+
+            // 快捷键
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (searchOverlay.classList.contains('visible')) closeSearch();
+                    else if (startMenuVisible) closeStartMenu();
+                    else closeShutdown();
+                }
+                if ((e.ctrlKey && e.shiftKey && e.key === 'F') || e.key === 'F3') {
+                    e.preventDefault();
+                    openSearch();
+                }
+            });
+
+            // 辅助
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            console.log('🖥️ Windows XP AI Desktop 已启动');
+        })();
+    </script>
+</body>
+</html>
