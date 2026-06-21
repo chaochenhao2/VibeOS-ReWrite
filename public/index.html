@@ -252,7 +252,7 @@
             const id = createWindow(title);
             const body = document.getElementById(`body-${id}`);
             body.innerHTML = '<div style="padding:20px;color:#888;">⏳ AI 正在生成 HTML 页面...</div>';
-            const instruction = `生成一个关于“${title}”的可运行 HTML 页面，必须包含真实按钮交互（onclick等），不能只有外观。直接返回完整 HTML 代码。`;
+            const instruction = `生成一个关于“${title}”的可运行 HTML 页面，必须包含真实按钮交互（onclick等），不能只有外观。直接返回完整 HTML 代码。如果可以，尽量不要手动换行代码。`;
             requestHtmlStream(id, instruction);
         }
 

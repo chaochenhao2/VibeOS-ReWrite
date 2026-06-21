@@ -1,3 +1,7 @@
+delete process.env.ENABLE_AI;
+delete process.env.API_KEY;
+delete process.env.API_URL;
+delete process.env.API_MODEL;
 require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
@@ -95,7 +99,7 @@ app.post('/api/generate-html-stream', async (req, res) => {
             const messages = [
                 {
                     role: 'system',
-                    content: `你是一个交互式 HTML 页面生成器。生成完整、可运行的 HTML 页面（含 CSS 和 JS）。所有按钮必须有真实 onclick 功能。必须生成完整的 HTML 文档，以 </html> 结束。不要任何解释，直接返回 HTML 代码。`
+                    content: `你是一个交互式 HTML 页面生成器。生成完整、可运行的 HTML 页面（含 CSS 和 JS）。所有按钮必须有真实 onclick 功能。必须生成完整的 HTML 文档，以 </html> 结束。不要任何解释，直接返回 HTML 代码。如果可以，尽量不要手动换行代码。`
                 },
                 ...(history || []),
                 { role: 'user', content: instruction }
